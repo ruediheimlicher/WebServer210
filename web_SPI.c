@@ -78,7 +78,7 @@ static volatile uint16_t					SPI_ErrCounter=0x00;
 
 #define out_PULSE_DELAY			200								// Pause bei shift_byte
 
-#define out_BUFSIZE				32								// Anzahl Bytes
+#define out_BUFSIZE				48								// Anzahl Bytes
 
 // Ausgang:
 volatile uint8_t					outbuffer[out_BUFSIZE];	// buffer fuer die Ausgangsdaten
