@@ -244,7 +244,7 @@ static uint8_t mymac[6] = {0x52,0x48,0x34,0x37,0x30,0x32};
 //static uint8_t myip[4] = {192,168,255,100};
 
 // IP des Webservers
-static uint8_t myip[4] = {192,168,1,211};
+static uint8_t myip[4] = {192,168,1,210};
 
 // IP address of the web server to contact (IP of the first portion of the URL):
 //static uint8_t websrvip[4] = {77,37,2,152};
@@ -1487,6 +1487,11 @@ int main(void)
 	
 	/* ************************************************************************ */
 	/* Eigene Main														*/
+   
+   /*
+    lfuses sind 60 !!
+    */
+
 	/* ************************************************************************ */
 	//JTAG deaktivieren (datasheet 231)
    //	MCUCSR |=(1<<7);
@@ -1495,6 +1500,16 @@ int main(void)
 	MCUSR = 0;
 	wdt_disable();
 	Temperatur=0;
+   
+   if (TESTSERVER)
+   {
+      mymac[5] = 0x13;
+      myip[3] = 213;
+   }
+   
+
+   
+   
 	//SLAVE
 	//uint16_t Tastenprellen=0x0fff;
 	uint16_t loopcount0=0;
