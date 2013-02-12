@@ -9,4 +9,8 @@ build/*
 *.xcodeproj
 *.hex
 *.o
-runavarice.#
+runavarice.*
+.dep
+README.htm
+WebServer_SPI_Log
+
