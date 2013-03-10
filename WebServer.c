@@ -2414,7 +2414,7 @@ int main(void)
 				
 #pragma mark cmd
 				
-				out_startdaten=DATATASK;	// default
+//				out_startdaten=DATATASK;	// default
 				
 				// out_daten setzen
 				cmd=analyse_get_url((char *)&(buf[dat_p+5]));
