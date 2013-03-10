@@ -39,6 +39,7 @@
 // Tux-Version
 // 1: Erste Version. LCD auf
 
+#define TESTSERVER   0
 
 #define TUXVERSION   1
 
@@ -370,11 +371,11 @@ ISR(TIMER0_COMPA_vect)
 {
    
    TCNT0=0;
-	if(EventCounter < 0x8FFF)// am Zaehlen // 0x1FF: 2 s
+	if(EventCounter < 0x8FFF)// am Zaehlen, warten auf beenden von TWI // 0x1FF: 2 s
 	{
 		
 	}
-	else // Ueberlauf,SPI einleiten
+	else // Ueberlauf, TWI ist beendet,SPI einleiten
 	{
 		
 		EventCounter =0;
@@ -974,7 +975,7 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
 						webtaskflag = EEPROMWRITETASK;					// Task setzen
 						//EEPROMTxStartDaten=webtaskflag;
 						
-						out_startdaten=EEPROMWRITETASK;
+						out_startdaten=EEPROMWRITETASK; // B7
 						
 						// Test
 						/*
@@ -1504,6 +1505,7 @@ int main(void)
    if (TESTSERVER)
    {
       mymac[5] = 0x13;
+      
       myip[3] = 213;
    }
    
@@ -2472,7 +2474,10 @@ int main(void)
 					setTWI_Status(1);
 					//webspistatus |= (1<< SEND_REQUEST_BIT);
 					//webspistatus &= ~(1<< TWI_WAIT_BIT);			// Daten wieder an HomeCentral senden
-					lcd_clr_line(0);
+					
+               
+               
+               lcd_clr_line(0);
 					lcd_gotoxy(13, 0);
 					lcd_puts("V:\0");
 					lcd_puts(VERSION);
