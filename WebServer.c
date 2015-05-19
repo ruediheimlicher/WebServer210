@@ -39,7 +39,7 @@
 // Tux-Version
 // 1: Erste Version. LCD auf
 
-#define TESTSERVER   0
+#define TESTSERVER   1
 
 #define TUXVERSION   1
 
@@ -78,13 +78,9 @@
 
 #define MASTERCONTROLPIN	4           // Eingang fuer MasterControl: Meldung MasterReset
 
-
-
-
-
 volatile uint8_t rxdata =0;
 volatile uint16_t EventCounter=0;
-static char baseurl[]="http://ruediheimlicher.dyndns.org/";
+static char baseurl[]="http://ruediheimlicherhome.dyndns.org/";
 
 
 
@@ -245,14 +241,21 @@ static uint8_t mymac[6] = {0x52,0x48,0x34,0x37,0x30,0x32};
 //static uint8_t myip[4] = {192,168,255,100};
 
 // IP des Webservers
-static uint8_t myip[4] = {192,168,1,210};
+static uint8_t myip[4] = {192,168,1,211};
+static uint8_t mytestip[4] = {192,168,1,213};
 
 // IP address of the web server to contact (IP of the first portion of the URL):
 //static uint8_t websrvip[4] = {77,37,2,152};
 
 
 // ruediheimlicher
-static uint8_t websrvip[4] = {193,17,85,42}; // ruediheimlicher 193.17.85.42
+// static uint8_t websrvip[4] = {193,17,85,42}; // ruediheimlicher 193.17.85.42 nine
+//static uint8_t websrvip[4] = {213,188,35,156}; //   30.7.2014 msh
+//static uint8_t websrvip[4] = {64,37,49,112}; //     64.37.49.112   28.02.2015 hostswiss // Pfade in .pl angepasst: cgi-bin neu in root dir
+static uint8_t websrvip[4] = {217,26,52,16};//        217.26.52.16  24.03.2015 hostpoint
+
+static uint8_t localwebsrvip[4] = {127,0,0,1};//        localhost
+
 
 // The name of the virtual host which you want to contact at websrvip (hostname of the first portion of the URL):
 
@@ -277,6 +280,8 @@ static uint8_t gwip[4] = {192,168,1,1};// Rueti
 static char urlvarstr[21];
 // listen port for tcp/www:
 #define MYWWWPORT 80
+
+#define TESTMYWWWPORT 82
 //
 
 #define BUFFER_SIZE 800
@@ -1504,9 +1509,6 @@ int main(void)
    
    if (TESTSERVER)
    {
-      mymac[5] = 0x13;
-      
-      myip[3] = 213;
    }
    
 
@@ -1645,10 +1647,27 @@ int main(void)
 	//PORTD &=~(1<<PD0);;
 	
 	//init the web server ethernet/ip layer:
-	init_ip_arp_udp_tcp(mymac,myip,MYWWWPORT);
-	// init the web client:
-	client_set_gwip(gwip);  // e.g internal IP of dsl router
-	client_set_wwwip(websrvip);
+   if (TESTSERVER)
+   {
+      mymac[5] = 0x13;
+      
+      myip[3] = 213;
+
+      init_ip_arp_udp_tcp(mymac,myip,TESTMYWWWPORT);
+      // init the web client:
+      client_set_gwip(gwip);  // e.g internal IP of dsl router
+      
+      client_set_wwwip(localwebsrvip);
+     
+   }
+   else
+   {
+      init_ip_arp_udp_tcp(mymac,myip,MYWWWPORT);
+      // init the web client:
+      client_set_gwip(gwip);  // e.g internal IP of dsl router
+   
+      client_set_wwwip(websrvip);
+   }
 	register_ping_rec_callback(&ping_callback);
 	setTWI_Status(1);
 	
@@ -1936,7 +1955,7 @@ int main(void)
 					
 				case DATATASK:		// C0, Daten von Homecentral an Homeserver schicken
 				{
-					
+					// inbuffer wird vom Master via SPI zum Webserver geschickt.
 					SolarDataString[0]='\0';
 					
 					char key1[]="pw=";
@@ -1988,6 +2007,24 @@ int main(void)
                //					key1="pw=\0";
                //					sstr="Pong\0";
                
+               /* In TWI_Master:
+                outbuffer[0] = (HEIZUNG << 5);					// Bit 5-7: Raumnummer
+                outbuffer[0] |= (Zeit.stunde & 0x1F);			//	Bit 0-4: Stunde, 5 bit
+                outbuffer[1] = (0x01 << 6);						// Bits 6,7: Art=1
+                outbuffer[1] |= Zeit.minute & 0x3F;				// Bits 0-5: Minute, 6 bit
+                outbuffer[2] = HeizungRXdaten[0];				//	Vorlauf
+                
+                outbuffer[3] = HeizungRXdaten[1];				//	Rücklauf
+                outbuffer[4] = HeizungRXdaten[2];				//	Aussen
+                
+                outbuffer[5] = 0;
+                outbuffer[5] |= HeizungRXdaten[3];				//	Brennerstatus Bit 2
+                outbuffer[5] |= HeizungStundencode;			// Bit 4, 5 gefiltert aus Tagplanwert von Brenner und Mode
+                outbuffer[5] |= RinneStundencode;				// Bit 6, 7 gefiltert aus Tagplanwert von Rinne
+                
+                uebertragen in d5
+                */
+               
 					//char d[4]={};
 					strcpy(HeizungDataString,key1);
 					strcat(HeizungDataString,sstr);
@@ -2030,27 +2067,39 @@ int main(void)
 					//key1="pw=\0";
 					//sstr="Pong\0";
                
+               // inbuffer wird vom Master via SPI zum Webserver geschickt.
+               
+               // AlarmDataString geht an alarm.pl
+               
 					AlarmDataString[0]='\0';
 					strcpy(AlarmDataString,"pw=");
 					strcat(AlarmDataString,"Pong");
 					
-					strcat(AlarmDataString,"&d0=");
+               // Alarm vom Master:
+               // Bits:
+               // WASSERALARMESTRICH    1
+               // TIEFKUEHLALARM        3
+               // WASSERALARMKELLER     4
+               strcat(AlarmDataString,"&d0=");
 					itoa(inbuffer[31]++,d,16);
 					strcat(AlarmDataString,d);
                
+               // TWI-errcount Master> main> l 1672
 					strcat(AlarmDataString,"&d1=");
 					itoa(inbuffer[30]++,d,16);
 					strcat(AlarmDataString,d);
 					
-               // Echo von Heizung
+               // Echo von WoZi
 					strcat(AlarmDataString,"&d2=");
 					itoa(inbuffer[29]++,d,16);
 					strcat(AlarmDataString,d);
 					
+               // txbuffer[0] von Heizung: Stundencode l 2807
 					strcat(AlarmDataString,"&d3=");
 					itoa(inbuffer[28]++,d,16);
 					strcat(AlarmDataString,d);
 					
+               // HeizungStundencode l 2773
 					strcat(AlarmDataString,"&d4=");
 					itoa(inbuffer[27]++,d,16);
 					strcat(AlarmDataString,d);
@@ -2067,6 +2116,7 @@ int main(void)
 					itoa(inbuffer[24]++,d,16);
 					strcat(AlarmDataString,d);
                
+               // Zeit.minute, 6 bit
 					strcat(AlarmDataString,"&d8=");
 					itoa(inbuffer[23]++,d,16);
 					strcat(AlarmDataString,d);
@@ -2103,7 +2153,7 @@ int main(void)
 					sendWebCount++;
 					//		sendWebCount=1; // SolarDataString schicken
 					
-					//						lcd_gotoxy(11,0);
+					//						lcd_gotoxy(5,0);
 					//						lcd_puts("cnt:\0");
 					//						lcd_puthex(sendWebCount);
 					
@@ -2190,7 +2240,16 @@ int main(void)
 					
 				case ERRTASK:
 				{
-               
+               /* 
+                // in Master:
+                out_lbdaten=13;
+                out_hbdaten=13;
+                
+                outbuffer[0]=Read_Err;
+                outbuffer[1]=Write_Err;
+                outbuffer[2]=EEPROM_Err;
+
+                */
 					sendWebCount=8; // Error senden
                
 				}break;
@@ -2221,7 +2280,6 @@ int main(void)
 					{
 						lcd_gotoxy(7,0);
 						lcd_puts("pend\0");
-                  
 					}
                
 				}break;
@@ -2309,7 +2367,7 @@ int main(void)
 				}
             
 #pragma mark SolarDaten an HomeServer schicken
-				if (sendWebCount == 1) // SolarDaten an HomeServer schicken
+				if (sendWebCount == 1) // Solar-Daten an HomeServer -> solar schicken
 				{
 					
 					start_web_client=2;
@@ -2319,9 +2377,11 @@ int main(void)
 					start_web_client=0;
 					
 					
-					
+               lcd_gotoxy(11,0);
+               lcd_putc('s');
+
 					// Daten an Solar schicken
-					client_browse_url(PSTR("/cgi-bin/solar.pl?"),SolarDataString,PSTR(WEBSERVER_VHOST),&solar_browserresult_callback);
+					client_browse_url((char*)PSTR("/cgi-bin/solar.pl?"),SolarDataString,(char*)PSTR(WEBSERVER_VHOST),&solar_browserresult_callback);
 					
 					
 					sendWebCount++;
@@ -2330,7 +2390,7 @@ int main(void)
             
             // +++++++++++++++
 #pragma mark HeizungDaten an HomeServer schicken
-				if (sendWebCount == 3) // Daten an HomeServer schicken
+				if (sendWebCount == 3) // Home-Daten an HomeServer -> home schicken
 				{
 					
 					start_web_client=5;
@@ -2339,10 +2399,15 @@ int main(void)
 					
 					start_web_client=0;
 					
-					
+               lcd_gotoxy(11,0);
+               lcd_putc('h');
+				
 					// Daten an Home schicken
-					client_browse_url(PSTR("/cgi-bin/home.pl?"),HeizungDataString,PSTR(WEBSERVER_VHOST),&home_browserresult_callback);
+					client_browse_url(PSTR("/cgi-bin/home.pl?"),HeizungDataString,(char*)PSTR(WEBSERVER_VHOST),&home_browserresult_callback);
                
+               
+               //client_browse_url("/cgi-bin/home.pl?",HeizungDataString,WEBSERVER_VHOST,&home_browserresult_callback);
+
 					//lcd_puts("cgi l:\0");
 					//lcd_putint2(strlen(SolarDataString));
 					
@@ -2350,26 +2415,30 @@ int main(void)
 				}
 				
 #pragma mark AlarmDaten an HomeServer schicken
-				if (sendWebCount == 6) // Daten an HomeServer schicken
+				if (sendWebCount == 6) // Alarm-Daten an HomeServer ->Alarm schicken
 				{
 					
 					start_web_client=7;
 					web_client_attempts++;
 					
-					
 					start_web_client=0;
 					
-					
+               lcd_gotoxy(11,0);
+               lcd_putc('a');
+
 					// Daten an Alarm schicken
-					client_browse_url(PSTR("/cgi-bin/alarm.pl?"),AlarmDataString,PSTR(WEBSERVER_VHOST),&alarm_browserresult_callback);
+					client_browse_url(PSTR("/cgi-bin/alarm.pl?"),AlarmDataString,(char*)PSTR(WEBSERVER_VHOST),&alarm_browserresult_callback);
                
+               
+               //client_browse_url("/cgi-bin/alarm.pl?",AlarmDataString,WEBSERVER_VHOST,&alarm_browserresult_callback);
+
 					//lcd_puts("cgi l:\0");
 					//lcd_putint2(strlen(SolarDataString));
 					
 					sendWebCount++;
 				}
 				
-				if (sendWebCount == 8) // Daten an HomeServer schicken
+				if (sendWebCount == 8) // incrementieren
 				{
                
 					
