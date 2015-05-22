@@ -222,7 +222,7 @@ void lcd_put_tempAbMinus20(uint16_t temperatur);
 /* ************************************************************************ */
 /* Ende Eigene Deklarationen																 */
 /* ************************************************************************ */
-
+#pragma mark web settings
 
 // Note: This software implements a web server and a web browser.
 // The web server is at "myip" and the browser tries to access "websrvip".
@@ -1645,19 +1645,20 @@ int main(void)
 	
 	//DDRB|= (1<<DDB1); // LED, enable PB1, LED as output
 	//PORTD &=~(1<<PD0);;
-	
+#pragma mark web init
+   
 	//init the web server ethernet/ip layer:
    if (TESTSERVER)
    {
       mymac[5] = 0x13;
       
-      myip[3] = 213;
+      //myip[3] = 213;
 
-      init_ip_arp_udp_tcp(mymac,myip,TESTMYWWWPORT);
+      init_ip_arp_udp_tcp(mymac,mytestip,TESTMYWWWPORT);
       // init the web client:
       client_set_gwip(gwip);  // e.g internal IP of dsl router
       
-      client_set_wwwip(localwebsrvip);
+      client_set_wwwip(websrvip);
      
    }
    else
