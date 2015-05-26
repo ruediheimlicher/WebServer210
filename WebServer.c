@@ -87,17 +87,20 @@ static char baseurl[]="http://ruediheimlicherhome.dyndns.org/";
 /* *************************************************************************  */
 /* Eigene Deklarationen                                                       */
 /* *************************************************************************  */
-#define NULLTASK					0xB0	// Nichts tun
+
 #define ERRTASK					0xA0	// F
 
+#define NULLTASK					0xB0	// Nichts tun
 #define STATUSTASK				0xB1	// Status des TWI aendern
 #define STATUSCONFIRMTASK		0xB2	// Statusaenderung des TWI bestaetigen
-#define EEPROMREADTASK			0xB8	// von EEPROM lesen
-#define EEPROMSENDTASK			0xB9	// Daten vom HomeServer an HomeCentral senden
+
+#define EEPROMREPORTTASK		0xB4	// Daten vom EEPROM an HomeServer senden
+#define EEPROMCONFIRMTASK		0xB5	// Quittung an HomeCentral senden
 #define EEPROMRECEIVETASK		0xB6	// Adresse fuer EEPROM-Write empfangen
 #define EEPROMWRITETASK			0xB7	// auf EEPROM schreiben
-#define EEPROMCONFIRMTASK		0xB5	// Quittung an HomeCentral senden
-#define EEPROMREPORTTASK		0xB4	// Daten vom EEPROM an HomeServer senden
+#define EEPROMREADTASK			0xB8	// von EEPROM lesen
+#define EEPROMSENDTASK			0xB9	// Daten vom HomeServer an HomeCentral senden
+
 
 #define EEPROMREADWOCHEATASK	0xBA
 #define EEPROMREADWOCHEBTASK	0xBB
@@ -165,6 +168,7 @@ static char ErrDataString[32];
 
 
 volatile uint8_t oldErrCounter=0;
+volatile uint16_t datcounter=0;
 
 
 /*
@@ -241,7 +245,7 @@ static uint8_t mymac[6] = {0x52,0x48,0x34,0x37,0x30,0x32};
 //static uint8_t myip[4] = {192,168,255,100};
 
 // IP des Webservers
-static uint8_t myip[4] = {192,168,1,211};
+static uint8_t myip[4] = {192,168,1,210};
 static uint8_t mytestip[4] = {192,168,1,213};
 
 // IP address of the web server to contact (IP of the first portion of the URL):
@@ -254,13 +258,14 @@ static uint8_t mytestip[4] = {192,168,1,213};
 //static uint8_t websrvip[4] = {64,37,49,112}; //     64.37.49.112   28.02.2015 hostswiss // Pfade in .pl angepasst: cgi-bin neu in root dir
 static uint8_t websrvip[4] = {217,26,52,16};//        217.26.52.16  24.03.2015 hostpoint
 
-static uint8_t localwebsrvip[4] = {127,0,0,1};//        localhost
+static uint8_t testwebsrvip[4] = {127,0,0,1};//        localhost
 
 
 // The name of the virtual host which you want to contact at websrvip (hostname of the first portion of the URL):
 
-
 #define WEBSERVER_VHOST "www.ruediheimlicher.ch"
+
+//#define WEBSERVER_VHOST "localhost/public_html"
 
 
 // Default gateway. The ip address of your DSL router. It can be set to the same as
@@ -1200,8 +1205,14 @@ uint16_t print_webpage_status(uint8_t *buf)
 	uint16_t plen=0;
 	//char vstr[5];
 	plen=http200ok();
-	
+	if (TESTSERVER)
+   {
+      plen=fill_tcp_data_p(buf,plen,PSTR("<h1>HomeCentral Test</h1>"));
+   }
+   else
+   {
 	plen=fill_tcp_data_p(buf,plen,PSTR("<h1>HomeCentral</h1>"));
+   }
 	//
 	char	TemperaturString[7];
 	
@@ -1688,7 +1699,7 @@ int main(void)
       
       //myip[3] = 213;
 
-      init_ip_arp_udp_tcp(mymac,mytestip,TESTMYWWWPORT);
+      init_ip_arp_udp_tcp(mymac,mytestip,MYWWWPORT);
       // init the web client:
       client_set_gwip(gwip);  // e.g internal IP of dsl router
       
@@ -1718,6 +1729,7 @@ int main(void)
 	Timer0();
    //
    lcd_clr_line(1);
+   //lcd_puts(WEBSERVER_VHOST);
    OSZIHI;
    //DDRD = 0xFF;
 #pragma  mark "while"
@@ -1957,11 +1969,18 @@ int main(void)
 				lcd_puts("iErr \0");
             //		lcd_puthex(inbuffer[24]);	// Read_Err
             //		lcd_puthex(inbuffer[25]);	// Write_Err
-				lcd_puthex(inbuffer[26]);	// Zeitminuten
-				lcd_puthex(inbuffer[27]);	// Heizung-Stundencode
-				lcd_puthex(inbuffer[28]);	// Brenner-Stundencode
-				lcd_puthex(inbuffer[29]);	// sync fehler 9.4.11
 				
+            //lcd_puthex(inbuffer[26]);	// Zeitminuten
+				//lcd_puthex(inbuffer[27]);	// Heizung-Stundencode
+				//lcd_puthex(inbuffer[28]);	//
+				//lcd_puthex(inbuffer[29]);	//
+
+            lcd_puthex(inbuffer[44]);	//
+            lcd_puthex(inbuffer[45]);	//
+            lcd_puthex(inbuffer[46]);	//
+            lcd_puthex(inbuffer[47]);	//
+
+            
 				
 			} // in_startdaten
 			
@@ -2333,7 +2352,7 @@ int main(void)
 			uint8_t i=0;
 			for (i=0 ; i<8; i++)
 			{
-				outbuffer[i]=0;
+				//outbuffer[i]=0;
 			}
 			
 			// Marker fuer SPI-Event loeschen
@@ -2354,11 +2373,12 @@ int main(void)
 			cli();
 			
 			dat_p=packetloop_icmp_tcp(buf,enc28j60PacketReceive(BUFFER_SIZE, buf));
-			//dat_p=1;
+			
 			
 			if(dat_p==0) // Kein Aufruf, eigene Daten senden an Homeserver
 			{
-				//lcd_gotoxy(0,1);
+            datcounter++;
+				//lcd_gotoxy(0,0);
 				//lcd_puts("TCP\0");
 				//lcd_puthex(start_web_client);
 				//lcd_puthex(sendWebCount);
@@ -2369,10 +2389,11 @@ int main(void)
 					sec=0;
 					//lcd_gotoxy(0,0);
 					//lcd_puts("    \0");
+					//lcd_clr_line(1);
+					lcd_gotoxy(10,0);
+					lcd_puts("ping\0");
 					lcd_clr_line(1);
-					lcd_gotoxy(12,0);
-					lcd_puts("ping ok\0");
-					lcd_clr_line(1);
+               lcd_putint12(datcounter);
 					delay_ms(100);
 					start_web_client=2;
 					web_client_attempts++;
@@ -2413,16 +2434,18 @@ int main(void)
                   start_web_client=0;
                   
                   
-                  lcd_gotoxy(11,0);
+                  lcd_gotoxy(10,0);
                   lcd_putc('s');
                   
                   // Daten an Solar schicken
-                  client_browse_url((char*)PSTR("/cgi-bin/experiment.pl?"),SolarDataString,(char*)PSTR(WEBSERVER_VHOST),&solar_browserresult_callback);
+                  client_browse_url((char*)PSTR("/cgi-bin/experiment.pl?"),SolarDataString,(char*)PSTR(WEBSERVER_VHOST),&exp_browserresult_callback);
                   
                   
                   sendWebCount++;
                   
                }
+               
+               
                
             }
             
@@ -2430,6 +2453,7 @@ int main(void)
 				else
             
             {
+               
                if (sendWebCount == 1) // Solar-Daten an HomeServer -> solar schicken
                {
                   
@@ -2531,11 +2555,13 @@ int main(void)
 			 goto SENDTCP;
 			 }
 			 */
+         //lcd_gotoxy(0,0);
+         //lcd_puts("*GET*\0");
 			
 			
 			if (strncmp("/ ",(char *)&(buf[dat_p+4]),2)==0) // Slash am Ende der URL, Status-Seite senden
 			{
-				lcd_gotoxy(10,0);
+				lcd_gotoxy(15,3);
 				lcd_puts("+/+\0");
 				dat_p=http200ok(); // Header setzen
 				dat_p=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<h1>200 OK</h1>"));
@@ -2548,6 +2574,8 @@ int main(void)
 				// Teil der URL mit Form xyz?uv=... analysieren
 				
 #pragma mark cmd
+            //lcd_gotoxy(15,3);
+            //lcd_puts("-/-\0");
 				
 //				out_startdaten=DATATASK;	// default
 				
@@ -2558,6 +2586,7 @@ int main(void)
 				//lcd_puts("cmd:\0");
 				//lcd_putint(cmd);
 				//lcd_putc(' ');
+            
 				if (cmd == 1)
 				{
 					dat_p = print_webpage_confirm(buf);
