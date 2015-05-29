@@ -848,19 +848,24 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
                
 					out_startdaten=STATUSTASK; // B1
                
-					//lcd_gotoxy(6,0);
-					//lcd_puts(actionbuf);
+					lcd_gotoxy(6,0);
+					lcd_puts(actionbuf);
 					outbuffer[0]=atoi(actionbuf);
 					out_lbdaten=0x00;
 					out_lbdaten=0x00;
-               
+               uint8_t i=0;
 					if (actionbuf[0]=='0') // twi aus
 					{
                   
 						//WebTxDaten[1]='0';
 						outbuffer[1]=0;
 						out_hbdaten=0x00;
-						out_lbdaten=0x00;
+						out_lbdaten=0x11;
+                  for (i=0;i<4;i++)
+                  {
+                     outbuffer[i] = 10-i;
+                  }
+
 						return (2);
 					}
 					if (actionbuf[0]=='1') // twi ein
@@ -869,7 +874,12 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
 						//WebTxDaten[1]='0';
 						outbuffer[1]=1;
 						out_hbdaten=0x01;
-						out_lbdaten=0x00;
+						out_lbdaten=0x33;
+                  for (i=0;i<4;i++)
+                  {
+                     outbuffer[i] = i;
+                  }
+                  
 						return (3);				// Status da, sendet Bestaetigung an Homeserver
 					}
                
@@ -2135,7 +2145,7 @@ int main(void)
                // TIEFKUEHLALARM        3
                // WASSERALARMKELLER     4
                strcat(AlarmDataString,"&d0=");
-					itoa(inbuffer[31]++,d,16);
+					itoa(inbuffer[40]++,d,16);
 					strcat(AlarmDataString,d);
                
                // TWI-errcount Master> main> l 1672
