@@ -218,6 +218,9 @@ static uint8_t aktuelleDatenbreite=8;
 static volatile uint8_t send_cmd=0;
 
 
+volatile uint8_t					controlbuffer[out_BUFSIZE];	// controlbuffer fuer die Ausgangsdaten
+
+
 void Timer0(void);
 uint8_t WochentagLesen(unsigned char ADRESSE, uint8_t hByte, uint8_t lByte, uint8_t *Daten);
 uint8_t SlavedatenLesen(const unsigned char ADRESSE, uint8_t *Daten);
@@ -1011,7 +1014,7 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
 					
 					if (find_key_val(str,actionbuf,28,"data"))		// Datenstring mit '+' - Trennzeichen
 					{
-						//lcd_gotoxy(0,0);
+						//lcd_gotoxy(0,13);
 						//lcd_puthex(strlen(actionbuf));
 						//lcd_putc(' ');
 						//lcd_puts(actionbuf);
@@ -1998,7 +2001,9 @@ int main(void)
          if ((in_hbdaten==0xFF)&&(in_lbdaten==0xFF)) // Fehler
          {
             in_startdaten=DATATASK;
-            
+            lcd_gotoxy(18,0);
+            lcd_putc('!');
+
             
          }
          
@@ -2337,7 +2342,8 @@ int main(void)
 					
 				case EEPROMWRITETASK:
 					delay_ms(800);// warten, dann nochmals senden, um Daten zum EEPROM zu senden
-					break;
+					
+               break;
                
 				case STATUSTASK:
 				{
