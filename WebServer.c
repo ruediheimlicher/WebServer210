@@ -39,7 +39,7 @@
 // Tux-Version
 // 1: Erste Version. LCD auf
 
-#define TESTSERVER   1
+#define TESTSERVER   0
 
 #define TUXVERSION   1
 
@@ -286,7 +286,7 @@ static char urlvarstr[21];
 // listen port for tcp/www:
 #define MYWWWPORT 80
 
-#define TESTMYWWWPORT 82
+#define MYTESTWWWPORT 1401
 //
 
 #define BUFFER_SIZE 800
@@ -863,7 +863,7 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
 						out_lbdaten=0x11;
                   for (i=0;i<4;i++)
                   {
-                     outbuffer[i] = 10-i;
+                     //outbuffer[i] = 10-i;
                   }
 
 						return (2);
@@ -877,7 +877,7 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
 						out_lbdaten=0x33;
                   for (i=0;i<4;i++)
                   {
-                     outbuffer[i] = i;
+                     //outbuffer[i] = i;
                   }
                   
 						return (3);				// Status da, sendet Bestaetigung an Homeserver
@@ -1709,7 +1709,7 @@ int main(void)
       
       //myip[3] = 213;
 
-      init_ip_arp_udp_tcp(mymac,mytestip,MYWWWPORT);
+      init_ip_arp_udp_tcp(mymac,mytestip,MYTESTWWWPORT);
       // init the web client:
       client_set_gwip(gwip);  // e.g internal IP of dsl router
       
@@ -1731,6 +1731,7 @@ int main(void)
    for (i=0;i<out_BUFSIZE;i++)
 	{
       outbuffer[i]='-'; // hex: 2D
+      outbuffer[i]=0;
 	}
    
    //			end SPI
