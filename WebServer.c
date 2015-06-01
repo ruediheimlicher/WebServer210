@@ -2022,7 +2022,7 @@ int main(void)
                 outbuffer[5] |= HeizungStundencode;			// Bit 4, 5 gefiltert aus Tagplanwert von Brenner und Mode
                 outbuffer[5] |= RinneStundencode;				// Bit 6, 7 gefiltert aus Tagplanwert von Rinne
                 
-                uebertragen in d5
+                uebertragen in d5 von HeizungDataString
                 */
                
 					//char d[4]={};
