@@ -114,6 +114,12 @@ static char baseurl[]="http://ruediheimlicherhome.dyndns.org/";
 #define MASTERERRTASK			0xC7	// Fehlermeldung vom Master senden
 
 
+#define HOMECALLBACK       0
+#define SOLARCALLBACK       1
+#define ALARMCALLBACK       2
+#define EXPCALLBACK        3
+#define PINGCALLBACK       7
+
 #define STATUSTIMEOUT			0x0080
 //
 // Eventuell kritische Werte
@@ -169,6 +175,17 @@ static char ErrDataString[32];
 
 volatile uint8_t oldErrCounter=0;
 volatile uint16_t datcounter=0;
+
+volatile uint8_t callbackstatus=0;
+
+volatile uint8_t stunde = 0; // Stunde, Bit 0-4
+volatile uint8_t minute = 0; // Minute, Bit 0-5
+
+volatile uint8_t tagdesmonats = 0 ; // datum tag
+
+volatile uint8_t monat = 0; // datum monat: 1-3 jahr ab 2010: 4-7
+volatile uint8_t jahr = 0; // datum monat: 1-3 jahr ab 2010: 4-7
+
 
 
 /*
@@ -487,6 +504,7 @@ void ping_callback(uint8_t *ip)
          pingsrcip[i]=ip[i];
          i++;
       }
+      callbackstatus |= (1<< PINGCALLBACK);
       
    }
 }
@@ -523,18 +541,19 @@ void solar_browserresult_callback(uint8_t statuscode,uint16_t datapos)
    // datapos is not used in this example
    if (statuscode==0)
    {
-      
+      callbackstatus |= (1<< SOLARCALLBACK);
       lcd_gotoxy(0,0);
       lcd_puts("        \0");
       lcd_gotoxy(0,0);
       lcd_puts("s cb OK\0");
-      
+      lcd_puthex(callbackstatus);
       web_client_sendok++;
       //				sei();
       
    }
    else
    {
+      callbackstatus &= ~(1<< SOLARCALLBACK);
       lcd_gotoxy(0,0);
       lcd_puts("        \0");
       lcd_gotoxy(0,0);
@@ -546,21 +565,23 @@ void solar_browserresult_callback(uint8_t statuscode,uint16_t datapos)
 
 void home_browserresult_callback(uint8_t statuscode,uint16_t datapos)
 {
+   
    // datapos is not used in this example
    if (statuscode==0)
    {
-      
+      callbackstatus |= (1<< HOMECALLBACK);
       lcd_gotoxy(0,0);
       lcd_puts("        \0");
       lcd_gotoxy(0,0);
       lcd_puts("h cb OK\0");
-      
+      lcd_puthex(callbackstatus);
       web_client_sendok++;
       //				sei();
       
    }
    else
    {
+      callbackstatus &= ~(1<< HOMECALLBACK);
       lcd_gotoxy(0,0);
       lcd_puts("        \0");
       lcd_gotoxy(0,0);
@@ -577,18 +598,19 @@ void alarm_browserresult_callback(uint8_t statuscode,uint16_t datapos)
    // datapos is not used in this example
    if (statuscode==0)
    {
-      
+      callbackstatus |= (1<< ALARMCALLBACK);
       lcd_gotoxy(0,0);
       lcd_puts("        \0");
       lcd_gotoxy(0,0);
       lcd_puts("a cb OK\0");
-      
+      lcd_puthex(callbackstatus);
       web_client_sendok++;
       //				sei();
       
    }
    else
    {
+      callbackstatus &= ~(1<< ALARMCALLBACK);
       lcd_gotoxy(0,0);
       lcd_puts("         \0");
       lcd_gotoxy(0,0);
@@ -1231,6 +1253,8 @@ uint16_t print_webpage_status(uint8_t *buf)
 	
 	//
 	plen=fill_tcp_data_p(buf,plen,PSTR("<p>  HomeCentral<br>  Falkenstrasse 20<br>  8630 Rueti"));
+   
+   
 	plen=fill_tcp_data_p(buf,plen,PSTR("<hr><h4><font color=\"#00FF00\">Status</h4></font></p>"));
 	
 	
@@ -1947,12 +1971,19 @@ int main(void)
 				inbuffer[i]=0;
 			}
          
+         outbuffer[39] = callbackstatus;
+         //lcd_gotoxy(12,0);
+         //lcd_puthex(callbackstatus);
+         //lcd_puthex(outbuffer[39]);
+         
+         
 			// ******************************
 			// Daten auf SPI schieben
 			// ******************************
 #pragma mark shift
          
   			// Marker fuer SPI-Event setzen
+         
 			lcd_gotoxy(19,0);
 			lcd_putc('*');
          
@@ -2006,7 +2037,17 @@ int main(void)
 
             
          }
+         stunde = (inbuffer[46] ); // Stunde, Bit 0-4
+         minute = (inbuffer[47] ); // Minute, Bit 0-5
          
+         tagdesmonats = inbuffer[40] ; // datum tag
+         
+         monat = (inbuffer[41] & 0x0F ); // datum monat: 1-3 jahr ab 2010: 4-7
+         jahr = ((inbuffer[41] & 0xF0 )>>4) + 10; // datum monat: 1-3 jahr ab 2010: 4-7
+
+         //lcd_gotoxy(15,3);
+         //lcd_puthex(inbuffer[40]);
+         //lcd_puthex(inbuffer[41]);
          
          // Marker fuer SPI-Event entfernen
          lcd_gotoxy(19,0);
@@ -2456,7 +2497,7 @@ int main(void)
                   
                   // Daten an Solar schicken
                   client_browse_url((char*)PSTR("/cgi-bin/experiment.pl?"),SolarDataString,(char*)PSTR(WEBSERVER_VHOST),&exp_browserresult_callback);
-                  
+                  callbackstatus &= ~(1<< EXPCALLBACK);
                   
                   sendWebCount++;
                   
@@ -2486,7 +2527,7 @@ int main(void)
                   
                   // Daten an Solar schicken
                   client_browse_url((char*)PSTR("/cgi-bin/solar.pl?"),SolarDataString,(char*)PSTR(WEBSERVER_VHOST),&solar_browserresult_callback);
-                  
+                  callbackstatus &= ~(1<< SOLARCALLBACK);
                   
                   sendWebCount++;
                   
@@ -2508,7 +2549,7 @@ int main(void)
                   
                   // Daten an Home schicken
                   client_browse_url((char*)PSTR("/cgi-bin/home.pl?"),HeizungDataString,(char*)PSTR(WEBSERVER_VHOST),&home_browserresult_callback);
-                  
+                  callbackstatus &= ~(1<< HOMECALLBACK);
                   
                   //client_browse_url("/cgi-bin/home.pl?",HeizungDataString,WEBSERVER_VHOST,&home_browserresult_callback);
                   
@@ -2532,7 +2573,7 @@ int main(void)
                   
                   // Daten an Alarm schicken
                   client_browse_url((char*)PSTR("/cgi-bin/alarm.pl?"),AlarmDataString,(char*)PSTR(WEBSERVER_VHOST),&alarm_browserresult_callback);
-                  
+                  callbackstatus &= ~(1<< ALARMCALLBACK);
                   
                   //client_browse_url("/cgi-bin/alarm.pl?",AlarmDataString,WEBSERVER_VHOST,&alarm_browserresult_callback);
                   
