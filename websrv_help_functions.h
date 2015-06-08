@@ -14,6 +14,7 @@ extern void urldecode(char *urlbuf);
 extern void urlencode(char *str,char *urlbuf);
 extern uint8_t parse_ip(uint8_t *bytestr,char *str);
 extern void mk_net_str(char *resultstr,uint8_t *bytestr,uint8_t len,char separator,uint8_t base);
+extern void mk_hex2str(char *resultstr,uint8_t len,uint8_t hexzahl);
 
 
 #endif /* WEBSRV_HELP_FUNCTIONS_H */

@@ -1163,6 +1163,7 @@ uint16_t print_webpage_ok(uint8_t *buf,uint8_t *okcode)
 	// Schickt den okcode als Bestaetigung fuer den Empfang des Requests
 	uint16_t plen;
 	plen=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nPragma: no-cache\r\n\r\n"));
+   
 	plen=fill_tcp_data_p(buf,plen,PSTR("<p>okcode="));
 	plen=fill_tcp_data(buf,plen,(void*)okcode);
 	return plen;
@@ -1236,7 +1237,6 @@ uint16_t print_webpage_confirm(uint8_t *buf)
 // prepare the webpage by writing the data to the tcp send buffer
 uint16_t print_webpage_status(uint8_t *buf)
 {
-	
 	uint16_t plen=0;
 	//char vstr[5];
 	plen=http200ok();
@@ -1252,10 +1252,39 @@ uint16_t print_webpage_status(uint8_t *buf)
 	char	TemperaturString[7];
 	
 	//
-	plen=fill_tcp_data_p(buf,plen,PSTR("<p>  HomeCentral<br>  Falkenstrasse 20<br>  8630 Rueti"));
+	plen=fill_tcp_data_p(buf,plen,PSTR("<p>  HomeCentral<br>  Falkenstrasse 20<br>  8630 Rueti<br>"));
    
+   // Statustitel
+   plen=fill_tcp_data_p(buf,plen,PSTR("<hr><h3><font color=\"#00FF00\">Status</h3></font></p>"));
+
+   // Datum
+   char		DatString[7]={};
+   mk_hex2str(DatString,2,tagdesmonats);
+   plen=fill_tcp_data(buf,plen,DatString);
    
-	plen=fill_tcp_data_p(buf,plen,PSTR("<hr><h4><font color=\"#00FF00\">Status</h4></font></p>"));
+   plen=fill_tcp_data(buf,plen,":\0");
+   
+   mk_hex2str(DatString,2,monat);
+   plen=fill_tcp_data(buf,plen,DatString);
+   
+   plen=fill_tcp_data(buf,plen," \0");
+   
+   // Jahr
+   plen=fill_tcp_data(buf,plen,"20\0");
+   mk_hex2str(DatString,2,jahr);
+   plen=fill_tcp_data(buf,plen,DatString);
+
+   plen=fill_tcp_data(buf,plen," \0");
+   
+   //Uhrzeit
+   mk_hex2str(DatString,2,stunde);
+   plen=fill_tcp_data(buf,plen,DatString);
+   
+   plen=fill_tcp_data(buf,plen,":\0");
+   
+   mk_hex2str(DatString,2,minute);
+   plen=fill_tcp_data(buf,plen,DatString);
+   
 	
 	
 	//return(plen);
@@ -1322,7 +1351,6 @@ uint16_t print_webpage_status(uint8_t *buf)
 	plen=fill_tcp_data_p(buf,plen,PSTR("<br>Status: "));
 	uint8_t		Status=0;
 	char		StatusString[7]={};
-	
 	itoa((int)inbuffer[5],StatusString,10);
 	
 	

@@ -263,4 +263,27 @@ void mk_net_str(char *resultstr,uint8_t *bytestr,uint8_t len,char separator,uint
         resultstr[j]='\0';
 }
 
+void mk_hex2str(char *resultstr,uint8_t len,uint8_t hexzahl)
+{
+   uint8_t i=0;
+   if (hexzahl < 10)
+   {
+      resultstr[0] = '0';
+      resultstr[1] = hexzahl+'0';
+   }
+   else
+   {
+      
+         resultstr[1]=((hexzahl % 10) +'0');         // Modulo rechnen, dann den ASCII-Code von '0' addieren
+         hexzahl /= 10;
+         resultstr[0] = hexzahl+'0';
+      
+   }
+   
+  
+   resultstr[2]='\0'; // String Terminator
+}
+
+
+
 // end of websrv_help_functions.c
