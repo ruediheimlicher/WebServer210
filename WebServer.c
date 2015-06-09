@@ -223,6 +223,8 @@ extern volatile uint8_t twiflag;
 static uint8_t aktuelleDatenbreite=8;
 static volatile uint8_t send_cmd=0;
 
+volatile uint8_t					controlbuffer[out_BUFSIZE];	// controlbuffer fuer die Ausgangsdaten
+
 
 void Timer0(void);
 uint8_t WochentagLesen(unsigned char ADRESSE, uint8_t hByte, uint8_t lByte, uint8_t *Daten);
