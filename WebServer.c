@@ -291,8 +291,7 @@ static char urlvarstr[21];
 // listen port for tcp/www:
 #define MYWWWPORT 80
 
-#define TESTMYWWWPORT 82
-//
+#define MYTESTWWWPORT 1401//
 
 #define BUFFER_SIZE 800
 
@@ -1702,7 +1701,7 @@ int main(void)
       
       myip[3] = 213;
 
-      init_ip_arp_udp_tcp(mymac,myip,TESTMYWWWPORT);
+      init_ip_arp_udp_tcp(mymac,myip,MYTESTWWWPORT);
       // init the web client:
       client_set_gwip(gwip);  // e.g internal IP of dsl router
       
@@ -1723,7 +1722,8 @@ int main(void)
    //		SPI
    for (i=0;i<out_BUFSIZE;i++)
 	{
-      outbuffer[i]='-';
+      //outbuffer[i]='-';
+      outbuffer[i]= 0;
 	}
    
    //			end SPI
@@ -2130,7 +2130,7 @@ int main(void)
                // TIEFKUEHLALARM        3
                // WASSERALARMKELLER     4
                strcat(AlarmDataString,"&d0=");
-					itoa(inbuffer[31]++,d,16);
+					itoa(inbuffer[40]++,d,16);
 					strcat(AlarmDataString,d);
                
                // TWI-errcount Master> main> l 1672
