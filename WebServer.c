@@ -39,7 +39,7 @@
 // Tux-Version
 // 1: Erste Version. LCD auf
 
-#define TESTSERVER   1
+#define TESTSERVER   0
 
 #define TUXVERSION   1
 
@@ -241,7 +241,7 @@ static uint8_t mymac[6] = {0x52,0x48,0x34,0x37,0x30,0x32};
 //static uint8_t myip[4] = {192,168,255,100};
 
 // IP des Webservers
-static uint8_t myip[4] = {192,168,1,211};
+static uint8_t myip[4] = {192,168,1,210};
 static uint8_t mytestip[4] = {192,168,1,213};
 
 // IP address of the web server to contact (IP of the first portion of the URL):
@@ -2298,7 +2298,7 @@ int main(void)
 			uint8_t i=0;
 			for (i=0 ; i<8; i++)
 			{
-				outbuffer[i]=0;
+	//			outbuffer[i]=0;
 			}
 			
 			// Marker fuer SPI-Event loeschen
@@ -2355,7 +2355,7 @@ int main(void)
 					//delay_ms(1000);
 					
 					//strcat(urlvarstr,"data=
-					client_browse_url(PSTR("/cgi-bin/solar.pl?pw="),urlvarstr,PSTR(WEBSERVER_VHOST),&ping_callback);
+				//	client_browse_url(PSTR("/cgi-bin/solar.pl?pw="),urlvarstr,PSTR(WEBSERVER_VHOST),&ping_callback);
 					//client_browse_url(PSTR("/blatt/cgi-bin/home.pl?"),urlvarstr,PSTR(WEBSERVER_VHOST),&browserresult_callback);
 					
 				}
