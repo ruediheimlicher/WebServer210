@@ -283,7 +283,6 @@ static char urlvarstr[21];
 
 #define TESTMYWWWPORT 82
 //
-
 #define BUFFER_SIZE 800
 
 
