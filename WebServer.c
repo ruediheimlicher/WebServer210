@@ -483,6 +483,35 @@ void ping_callback(uint8_t *ip)
    }
 }
 
+
+void exp_browserresult_callback(uint8_t statuscode,uint16_t datapos)
+{
+   // datapos is not used in this example
+   if (statuscode==0)
+   {
+      
+      lcd_gotoxy(0,0);
+      lcd_puts("        \0");
+      lcd_gotoxy(0,0);
+      lcd_puts("e cb OK\0");
+      
+      web_client_sendok++;
+      //				sei();
+      
+   }
+   else
+   {
+      lcd_gotoxy(0,0);
+      lcd_puts("        \0");
+      lcd_gotoxy(0,0);
+      lcd_puts("e cb err\0");
+      lcd_puthex(statuscode);
+      
+   }
+}
+
+
+
 void solar_browserresult_callback(uint8_t statuscode,uint16_t datapos)
 {
    // datapos is not used in this example
