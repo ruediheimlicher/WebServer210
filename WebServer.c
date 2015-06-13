@@ -507,8 +507,6 @@ void exp_browserresult_callback(uint8_t statuscode,uint16_t datapos)
       lcd_puts("e cb OK\0");
       
       web_client_sendok++;
-      //				sei();
-      
    }
    else
    {
@@ -554,15 +552,12 @@ void home_browserresult_callback(uint8_t statuscode,uint16_t datapos)
    // datapos is not used in this example
    if (statuscode==0)
    {
-      
       lcd_gotoxy(0,0);
       lcd_puts("        \0");
       lcd_gotoxy(0,0);
       lcd_puts("h cb OK\0");
       
       web_client_sendok++;
-      //				sei();
-      
    }
    else
    {
@@ -2420,7 +2415,7 @@ int main(void)
             
             if (TESTSERVER)
             {
-               if (sendWebCount == 1) // Solar-Daten an HomeServer -> solar schicken
+               if (sendWebCount == 1) // Solar-Daten an HomeServer -> experiment schicken
                {
                   start_web_client=2;
                   web_client_attempts++;
@@ -2454,7 +2449,7 @@ int main(void)
                   
                   // Daten an Solar schicken
                   client_browse_url((char*)PSTR("/cgi-bin/solar.pl?"),SolarDataString,(char*)PSTR(WEBSERVER_VHOST),&solar_browserresult_callback);
-                  
+                  callbackstatus &= ~(1<< SOLARCALLBACK);
                   
                   sendWebCount++;
                   
@@ -2476,7 +2471,7 @@ int main(void)
                   
                   // Daten an Home schicken
                   client_browse_url((char*)PSTR("/cgi-bin/home.pl?"),HeizungDataString,(char*)PSTR(WEBSERVER_VHOST),&home_browserresult_callback);
-                  
+                  callbackstatus &= ~(1<< HOMECALLBACK);
                   
                   //client_browse_url("/cgi-bin/home.pl?",HeizungDataString,WEBSERVER_VHOST,&home_browserresult_callback);
                   
@@ -2501,7 +2496,7 @@ int main(void)
                   // Daten an Alarm schicken
                   client_browse_url((char*)PSTR("/cgi-bin/alarm.pl?"),AlarmDataString,(char*)PSTR(WEBSERVER_VHOST),&alarm_browserresult_callback);
                   
-                  
+                  callbackstatus &= ~(1<< ALARMCALLBACK);
                   //client_browse_url("/cgi-bin/alarm.pl?",AlarmDataString,WEBSERVER_VHOST,&alarm_browserresult_callback);
                   
                   //lcd_puts("cgi l:\0");
