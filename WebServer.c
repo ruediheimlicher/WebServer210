@@ -176,6 +176,7 @@ volatile uint8_t tagdesmonats = 1 ; // datum tag
 volatile uint8_t monat = 1; // datum monat: 1-3 jahr ab 2010: 4-7
 volatile uint8_t jahr = 1; // datum monat: 1-3 jahr ab 2010: 4-7
 
+volatile uint16_t weblencounter=0;
 
 /*
  uint8_t EEMEM EETitel;	//HomeCentral
@@ -502,9 +503,9 @@ void solar_browserresult_callback(uint8_t statuscode,uint16_t datapos)
    {
       
       lcd_gotoxy(0,0);
-      lcd_puts("        \0");
+      lcd_puts("      \0");
       lcd_gotoxy(0,0);
-      lcd_puts("s cb OK\0");
+      lcd_puts("s cbOK\0");
       
       web_client_sendok++;
       //				sei();
@@ -513,9 +514,9 @@ void solar_browserresult_callback(uint8_t statuscode,uint16_t datapos)
    else
    {
       lcd_gotoxy(0,0);
-      lcd_puts("        \0");
+      lcd_puts("      \0");
       lcd_gotoxy(0,0);
-      lcd_puts("s cb err\0");
+      lcd_puts("s cber\0");
       lcd_puthex(statuscode);
       
    }
@@ -528,9 +529,9 @@ void home_browserresult_callback(uint8_t statuscode,uint16_t datapos)
    {
       
       lcd_gotoxy(0,0);
-      lcd_puts("        \0");
+      lcd_puts("      \0");
       lcd_gotoxy(0,0);
-      lcd_puts("h cb OK\0");
+      lcd_puts("h cbOK\0");
       
       web_client_sendok++;
       //				sei();
@@ -539,9 +540,9 @@ void home_browserresult_callback(uint8_t statuscode,uint16_t datapos)
    else
    {
       lcd_gotoxy(0,0);
-      lcd_puts("        \0");
+      lcd_puts("      \0");
       lcd_gotoxy(0,0);
-      lcd_puts("h cb err\0");
+      lcd_puts("h cber\0");
       lcd_puthex(statuscode);
       
    }
@@ -556,9 +557,9 @@ void alarm_browserresult_callback(uint8_t statuscode,uint16_t datapos)
    {
       
       lcd_gotoxy(0,0);
-      lcd_puts("        \0");
+      lcd_puts("      \0");
       lcd_gotoxy(0,0);
-      lcd_puts("a cb OK\0");
+      lcd_puts("a cbOK\0");
       
       web_client_sendok++;
       //				sei();
@@ -567,9 +568,9 @@ void alarm_browserresult_callback(uint8_t statuscode,uint16_t datapos)
    else
    {
       lcd_gotoxy(0,0);
-      lcd_puts("         \0");
+      lcd_puts("      \0");
       lcd_gotoxy(0,0);
-      lcd_puts("a cb err\0");
+      lcd_puts("a cber\0");
       lcd_puthex(statuscode);
       
    }
@@ -1975,11 +1976,10 @@ int main(void)
 				lcd_puts("iErr \0");
             //		lcd_puthex(inbuffer[24]);	// Read_Err
             //		lcd_puthex(inbuffer[25]);	// Write_Err
-				lcd_puthex(inbuffer[44]);	// Zeitminuten
-				lcd_puthex(inbuffer[45]);	// Heizung-Stundencode
-				lcd_puthex(inbuffer[46]);	// Brenner-Stundencode
-				lcd_puthex(inbuffer[47]);	// sync fehler 9.4.11
-				
+				lcd_puthex(inbuffer[40]);	// tagdesmonats
+				lcd_puthex(inbuffer[41]);	// monat, jahr
+				lcd_puthex(inbuffer[46]);	// stunde
+				lcd_puthex(inbuffer[47]);	// minute
 				
 			} // in_startdaten
 			
@@ -2008,6 +2008,23 @@ int main(void)
 					
 				case DATATASK:		// C0, Daten von Homecentral an Homeserver schicken
 				{
+               // Datum und Uhrzeit von inbuffer lesen
+               stunde = (inbuffer[46] ); // Stunde, Bit 0-4
+               minute = (inbuffer[47] ); // Minute, Bit 0-5
+               
+               tagdesmonats = inbuffer[40] ; // datum tag
+               
+               monat = (inbuffer[41] & 0x0F ); // datum monat: 1-3 jahr ab 2010: 4-7
+               jahr = ((inbuffer[41] & 0xF0 )>>4) + 10; // datum monat: 1-3 jahr ab 2010: 4-7
+               lcd_gotoxy(7,0);
+               //lcd_puthex(monat);
+               lcd_puthex(jahr);
+               char		DatString[7]={};
+               mk_hex2str(DatString,2,jahr);
+               lcd_puts(DatString);
+               
+               
+               
 					// inbuffer wird vom Master via SPI zum Webserver geschickt.
 					SolarDataString[0]='\0';
 					
@@ -2528,6 +2545,9 @@ int main(void)
 				dat_p=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<h1>200 OK</h1>"));
 				//		dat_p=fill_tcp_data_p(buf,dat_p,PSTR("<h1>HomeCentral 200 OK</h1>"));
 				dat_p=print_webpage_status(buf);
+            weblencounter = dat_p;
+            //lcd_gotoxy(15,3);
+            //lcd_putint12(weblencounter);
 				goto SENDTCP;
 			}
 			else
@@ -2848,6 +2868,7 @@ int main(void)
 			//
 			//	OSZIHI;
 		SENDTCP:
+         
 			www_server_reply(buf,dat_p); // send data
 			
 			

@@ -120,6 +120,7 @@ void lcd_puthex(uint8_t zahl);
 void lcd_gotoxy(uint8_t x, uint8_t y);
 void lcd_putint(uint8_t zahl);
 void lcd_putint2(uint8_t zahl);
+void lcd_putint12(uint16_t zahl);
 void lcd_cls(void);
 void lcd_put_zeit(uint8_t minuten, uint8_t stunden);
 void lcd_put_temperatur(uint16_t temperatur);
