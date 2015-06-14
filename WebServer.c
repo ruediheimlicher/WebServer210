@@ -39,7 +39,7 @@
 // Tux-Version
 // 1: Erste Version. LCD auf
 
-#define TESTSERVER   1
+#define TESTSERVER   0
 
 #define TUXVERSION   1
 
@@ -165,6 +165,16 @@ static char ErrDataString[32];
 
 
 volatile uint8_t oldErrCounter=0;
+volatile uint16_t datcounter=0;
+
+
+volatile uint8_t callbackstatus = 0;
+
+volatile uint8_t stunde = 1; // Stunde, Bit 0-4
+volatile uint8_t minute = 1; // Minute, Bit 0-5
+volatile uint8_t tagdesmonats = 1 ; // datum tag
+volatile uint8_t monat = 1; // datum monat: 1-3 jahr ab 2010: 4-7
+volatile uint8_t jahr = 1; // datum monat: 1-3 jahr ab 2010: 4-7
 
 
 /*
@@ -241,7 +251,7 @@ static uint8_t mymac[6] = {0x52,0x48,0x34,0x37,0x30,0x32};
 //static uint8_t myip[4] = {192,168,255,100};
 
 // IP des Webservers
-static uint8_t myip[4] = {192,168,1,211};
+static uint8_t myip[4] = {192,168,1,210};
 static uint8_t mytestip[4] = {192,168,1,213};
 
 // IP address of the web server to contact (IP of the first portion of the URL):
@@ -282,6 +292,8 @@ static char urlvarstr[21];
 #define MYWWWPORT 80
 
 #define TESTMYWWWPORT 82
+#define MYTESTWWWPORT 1401
+
 //
 
 #define BUFFER_SIZE 800
@@ -1169,144 +1181,181 @@ uint16_t print_webpage_confirm(uint8_t *buf)
 // prepare the webpage by writing the data to the tcp send buffer
 uint16_t print_webpage_status(uint8_t *buf)
 {
-	
-	uint16_t plen=0;
-	//char vstr[5];
-	plen=http200ok();
-	
-	plen=fill_tcp_data_p(buf,plen,PSTR("<h1>HomeCentral</h1>"));
-	//
-	char	TemperaturString[7];
-	
-	//
-	plen=fill_tcp_data_p(buf,plen,PSTR("<p>  HomeCentral<br>  Falkenstrasse 20<br>  8630 Rueti"));
-	plen=fill_tcp_data_p(buf,plen,PSTR("<hr><h4><font color=\"#00FF00\">Status</h4></font></p>"));
-	
-	
-	//return(plen);
-	
-	
-	plen=fill_tcp_data_p(buf,plen,PSTR("<p>	Vorlauf: "));
-	Temperatur=0;
-	
-	//Temperatur=WebRxDaten[2];
-	Temperatur=inbuffer[2]; // Vorlauf
-	//Temperatur=Vorlauf;
-	tempbis99(Temperatur,TemperaturString);
-	
-	//r_itoa(Temperatur,TemperaturStringV);
-	plen=fill_tcp_data(buf,plen,TemperaturString);
-	plen=fill_tcp_data_p(buf,plen,PSTR("<br> Ruecklauf: "));
-	Temperatur=0;
-	//Temperatur=WebRxDaten[3];
-	Temperatur=inbuffer[3]; // Ruecklauf
-	tempbis99(Temperatur,TemperaturString);
-	plen=fill_tcp_data(buf,plen,TemperaturString);
-	
-	plen=fill_tcp_data_p(buf,plen,PSTR("<br> Aussen: "));
-	
-	//char	AussenTemperaturString[7];
-	Temperatur=0;
-	//Temperatur=WebRxDaten[4];
-	Temperatur=inbuffer[4];
-	//lcd_gotoxy(10,1);
-	//lcd_putc(' ');
-	//lcd_puthex(Temperatur);
-	
-	//tempbis99(Temperatur,TemperaturString);
-	tempAbMinus20(Temperatur,TemperaturString);
-	//lcd_putc(' ');
-	//lcd_puts(TemperaturString);
-	plen=fill_tcp_data(buf,plen,TemperaturString);
-	
-   //	return(plen);
-	//
-	//initADC(THERMOMETERPIN);
-	uint16_t tempBuffer=0;
-   //	tempBuffer = readKanal(THERMOMETERPIN);
-	plen=fill_tcp_data_p(buf,plen,PSTR("<br> Innen: "));
-	//Temperatur= (tempBuffer >>2);
-	//Temperatur *= 1.11;
-	//Temperatur=WebRxDaten[5];
-	//Temperatur=WebRxDaten[7];
-	Temperatur=inbuffer[7];
-	
-	//Temperatur -=40;
-	//lcd_gotoxy(0,1);
-	//lcd_putc(' ');
-	//lcd_puthex(Temperatur);
-	
-	tempbis99(Temperatur,TemperaturString);
-	//lcd_putc(' ');
-	//lcd_puts(TemperaturString);
-	plen=fill_tcp_data(buf,plen,TemperaturString);
-	//closeADC();
-	
-	plen=fill_tcp_data_p(buf,plen,PSTR("<br>TWI: "));
    
-	plen=fill_tcp_data_p(buf,plen,PSTR("<br>Status: "));
-	uint8_t		Status=0;
-	char		StatusString[7]={};
-	
-	itoa((int)inbuffer[5],StatusString,10);
-	
-	
-	plen=fill_tcp_data(buf,plen,StatusString);
-	
-	//r_itoa16((uint16_t)WebRxDaten[4],StatusString);
-	
-	plen=fill_tcp_data_p(buf,plen,PSTR("<br>Brenner: "));
-	//Status=WebRxDaten[5];
-	Status=inbuffer[5];
-	Status &= 0x04; // Bit 2	0 wenn ON
-	if (Status)
-	{
-		plen=fill_tcp_data_p(buf,plen,PSTR(" OFF"));
-	}
-	else
-	{
-		plen=fill_tcp_data_p(buf,plen,PSTR(" ON "));
-	}
-	
+   uint16_t plen=0;
+   //char vstr[5];
+   plen=http200ok();
+   if (TESTSERVER)
+   {
+      plen=fill_tcp_data_p(buf,plen,PSTR("<h1>HomeCentral Test</h1>"));
+   }
+   else
+   {
+      plen=fill_tcp_data_p(buf,plen,PSTR("<h1>HomeCentral</h1>"));
+   }
+   //
+   char	TemperaturString[7];
+   
+   //
+   plen=fill_tcp_data_p(buf,plen,PSTR("<p>  HomeCentral<br>  Falkenstrasse 20<br>  8630 Rueti"));
+   plen=fill_tcp_data_p(buf,plen,PSTR("<hr><h3><font color=\"#00FF00\">Status</h3></font></p>"));
+   
+   // Datum
+   char		DatString[7]={};
+   mk_hex2str(DatString,2,tagdesmonats);
+   plen=fill_tcp_data(buf,plen,DatString);
+   
+   
+   plen=fill_tcp_data(buf,plen,":\0");
+   if (monat)
+   {
+      mk_hex2str(DatString,2,monat);
+      plen=fill_tcp_data(buf,plen,DatString);
+   }
+   /*
+    plen=fill_tcp_data(buf,plen," \0");
+    
+    // Jahr
+    plen=fill_tcp_data(buf,plen,"20\0");
+    mk_hex2str(DatString,2,jahr);
+    plen=fill_tcp_data(buf,plen,DatString);
+    
+    plen=fill_tcp_data(buf,plen," \0");
+    
+    
+    //Uhrzeit
+    mk_hex2str(DatString,2,stunde);
+    plen=fill_tcp_data(buf,plen,DatString);
+    
+    plen=fill_tcp_data(buf,plen,":\0");
+    
+    mk_hex2str(DatString,2,minute);
+    plen=fill_tcp_data(buf,plen,DatString);
+    */
+   //return(plen);
+   
+   
+   plen=fill_tcp_data_p(buf,plen,PSTR("<p>	Vorlauf: "));
+   Temperatur=0;
+   
+   //Temperatur=WebRxDaten[2];
+   Temperatur=inbuffer[2]; // Vorlauf
+   //Temperatur=Vorlauf;
+   tempbis99(Temperatur,TemperaturString);
+   
+   //r_itoa(Temperatur,TemperaturStringV);
+   plen=fill_tcp_data(buf,plen,TemperaturString);
+   plen=fill_tcp_data_p(buf,plen,PSTR("<br> Ruecklauf: "));
+   Temperatur=0;
+   //Temperatur=WebRxDaten[3];
+   Temperatur=inbuffer[3]; // Ruecklauf
+   tempbis99(Temperatur,TemperaturString);
+   plen=fill_tcp_data(buf,plen,TemperaturString);
+   
+   plen=fill_tcp_data_p(buf,plen,PSTR("<br> Aussen: "));
+   
+   //char	AussenTemperaturString[7];
+   Temperatur=0;
+   //Temperatur=WebRxDaten[4];
+   Temperatur=inbuffer[4];
+   //lcd_gotoxy(10,1);
+   //lcd_putc(' ');
+   //lcd_puthex(Temperatur);
+   
+   //tempbis99(Temperatur,TemperaturString);
+   tempAbMinus20(Temperatur,TemperaturString);
+   //lcd_putc(' ');
+   //lcd_puts(TemperaturString);
+   plen=fill_tcp_data(buf,plen,TemperaturString);
+   
+   //	return(plen);
+   //
+   //initADC(THERMOMETERPIN);
+   uint16_t tempBuffer=0;
+   //	tempBuffer = readKanal(THERMOMETERPIN);
+   plen=fill_tcp_data_p(buf,plen,PSTR("<br> Innen: "));
+   //Temperatur= (tempBuffer >>2);
+   //Temperatur *= 1.11;
+   //Temperatur=WebRxDaten[5];
+   //Temperatur=WebRxDaten[7];
+   Temperatur=inbuffer[7];
+   
+   //Temperatur -=40;
+   //lcd_gotoxy(0,1);
+   //lcd_putc(' ');
+   //lcd_puthex(Temperatur);
+   
+   tempbis99(Temperatur,TemperaturString);
+   //lcd_putc(' ');
+   //lcd_puts(TemperaturString);
+   plen=fill_tcp_data(buf,plen,TemperaturString);
+   //closeADC();
+   
+   plen=fill_tcp_data_p(buf,plen,PSTR("<br>TWI: "));
+   
+   plen=fill_tcp_data_p(buf,plen,PSTR("<br>Status: "));
+   uint8_t		Status=0;
+   char		StatusString[7]={};
+   
+   itoa((int)inbuffer[5],StatusString,10);
+   
+   
+   plen=fill_tcp_data(buf,plen,StatusString);
+   
+   //r_itoa16((uint16_t)WebRxDaten[4],StatusString);
+   
+   plen=fill_tcp_data_p(buf,plen,PSTR("<br>Brenner: "));
+   //Status=WebRxDaten[5];
+   Status=inbuffer[5];
+   Status &= 0x04; // Bit 2	0 wenn ON
+   if (Status)
+   {
+      plen=fill_tcp_data_p(buf,plen,PSTR(" OFF"));
+   }
+   else
+   {
+      plen=fill_tcp_data_p(buf,plen,PSTR(" ON "));
+   }
+   
    
    return(plen);
    
-	// Taste und Eingabe fuer Passwort
-	plen=fill_tcp_data_p(buf,plen,PSTR("<form action=/ack method=get>"));
-	plen=fill_tcp_data_p(buf,plen,PSTR("<p>\nPasswort: <input type=password size=10 name=pw ><input type=hidden name=tst value=1>  <input type=submit value=\"Bearbeiten\"></p></form>"));
-	
-	plen=fill_tcp_data_p(buf,plen,PSTR("<p><hr>"));
-	plen=fill_tcp_data(buf,plen,DATUM);
-	plen=fill_tcp_data_p(buf,plen,PSTR("  Ruedi Heimlicher"));
-	plen=fill_tcp_data_p(buf,plen,PSTR("<br>Version :"));
-	plen=fill_tcp_data(buf,plen,VERSION);
-	plen=fill_tcp_data_p(buf,plen,PSTR("\n<hr></p>"));
-	
-	//
-	
-	/*
-	 // Tux
-	 plen=fill_tcp_data_p(buf,plen,PSTR("<h2>web client status</h2>\n<pre>\n"));
-	 
-	 char teststring[24];
-	 strcpy(teststring,"Data");
-	 strcat(teststring,"-\0");
-	 strcat(teststring,"Uploads \0");
-	 strcat(teststring,"mit \0");
-	 strcat(teststring,"ping : \0");
-	 plen=fill_tcp_data(buf,plen,teststring);
-	 
-	 plen=fill_tcp_data_p(buf,plen,PSTR("Data-Uploads mit ping: "));
-	 // convert number to string:
-	 itoa(web_client_attempts,vstr,10);
-	 plen=fill_tcp_data(buf,plen,vstr);
-	 plen=fill_tcp_data_p(buf,plen,PSTR("\nData-Uploads aufs Web: "));
-	 // convert number to string:
-	 itoa(web_client_sendok,vstr,10);
-	 plen=fill_tcp_data(buf,plen,vstr);
-	 plen=fill_tcp_data_p(buf,plen,PSTR("\n</pre><br><hr>"));
-	 */
-	return(plen);
+   // Taste und Eingabe fuer Passwort
+   plen=fill_tcp_data_p(buf,plen,PSTR("<form action=/ack method=get>"));
+   plen=fill_tcp_data_p(buf,plen,PSTR("<p>\nPasswort: <input type=password size=10 name=pw ><input type=hidden name=tst value=1>  <input type=submit value=\"Bearbeiten\"></p></form>"));
+   
+   plen=fill_tcp_data_p(buf,plen,PSTR("<p><hr>"));
+   plen=fill_tcp_data(buf,plen,DATUM);
+   plen=fill_tcp_data_p(buf,plen,PSTR("  Ruedi Heimlicher"));
+   plen=fill_tcp_data_p(buf,plen,PSTR("<br>Version :"));
+   plen=fill_tcp_data(buf,plen,VERSION);
+   plen=fill_tcp_data_p(buf,plen,PSTR("\n<hr></p>"));
+   
+   //
+   
+   /*
+    // Tux
+    plen=fill_tcp_data_p(buf,plen,PSTR("<h2>web client status</h2>\n<pre>\n"));
+    
+    char teststring[24];
+    strcpy(teststring,"Data");
+    strcat(teststring,"-\0");
+    strcat(teststring,"Uploads \0");
+    strcat(teststring,"mit \0");
+    strcat(teststring,"ping : \0");
+    plen=fill_tcp_data(buf,plen,teststring);
+    
+    plen=fill_tcp_data_p(buf,plen,PSTR("Data-Uploads mit ping: "));
+    // convert number to string:
+    itoa(web_client_attempts,vstr,10);
+    plen=fill_tcp_data(buf,plen,vstr);
+    plen=fill_tcp_data_p(buf,plen,PSTR("\nData-Uploads aufs Web: "));
+    // convert number to string:
+    itoa(web_client_sendok,vstr,10);
+    plen=fill_tcp_data(buf,plen,vstr);
+    plen=fill_tcp_data_p(buf,plen,PSTR("\n</pre><br><hr>"));
+    */
+   return(plen);
 }
 
 void master_init(void)
@@ -1645,7 +1694,7 @@ int main(void)
 	
 	//DDRB|= (1<<DDB1); // LED, enable PB1, LED as output
 	//PORTD &=~(1<<PD0);;
-	
+#pragma mark web init
 	//init the web server ethernet/ip layer:
    if (TESTSERVER)
    {
@@ -1653,11 +1702,11 @@ int main(void)
       
       myip[3] = 213;
 
-      init_ip_arp_udp_tcp(mymac,myip,TESTMYWWWPORT);
+      init_ip_arp_udp_tcp(mymac,myip,MYTESTWWWPORT);
       // init the web client:
       client_set_gwip(gwip);  // e.g internal IP of dsl router
       
-      client_set_wwwip(localwebsrvip);
+      client_set_wwwip(websrvip);
      
    }
    else
@@ -1674,7 +1723,7 @@ int main(void)
    //		SPI
    for (i=0;i<out_BUFSIZE;i++)
 	{
-      outbuffer[i]='-';
+      outbuffer[i]=0;
 	}
    
    //			end SPI
@@ -1756,7 +1805,11 @@ int main(void)
 			}
 			LOOPLEDPORT ^=(1<<LOOPLED);
 			
-			if (webspistatus & (1<<TWI_WAIT_BIT))       // TWI ist aus, Timout ist am laufen, Sicherheit fuer wieder einschalten, wenn vergessen
+			
+         
+         
+         
+         if (webspistatus & (1<<TWI_WAIT_BIT))       // TWI ist aus, Timout ist am laufen, Sicherheit fuer wieder einschalten, wenn vergessen
          {
 				lcd_gotoxy(0,0);
 				lcd_puthex(TimeoutCounter);
@@ -1922,10 +1975,10 @@ int main(void)
 				lcd_puts("iErr \0");
             //		lcd_puthex(inbuffer[24]);	// Read_Err
             //		lcd_puthex(inbuffer[25]);	// Write_Err
-				lcd_puthex(inbuffer[26]);	// Zeitminuten
-				lcd_puthex(inbuffer[27]);	// Heizung-Stundencode
-				lcd_puthex(inbuffer[28]);	// Brenner-Stundencode
-				lcd_puthex(inbuffer[29]);	// sync fehler 9.4.11
+				lcd_puthex(inbuffer[44]);	// Zeitminuten
+				lcd_puthex(inbuffer[45]);	// Heizung-Stundencode
+				lcd_puthex(inbuffer[46]);	// Brenner-Stundencode
+				lcd_puthex(inbuffer[47]);	// sync fehler 9.4.11
 				
 				
 			} // in_startdaten
