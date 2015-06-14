@@ -166,6 +166,16 @@ static char ErrDataString[32];
 
 volatile uint8_t oldErrCounter=0;
 
+volatile uint8_t callbackstatus=0;
+
+volatile uint16_t datcounter=0;
+
+volatile uint8_t stunde = 0; // Stunde, Bit 0-4
+volatile uint8_t minute = 0; // Minute, Bit 0-5
+volatile uint8_t tagdesmonats = 0 ; // datum tag
+volatile uint8_t monat = 0; // datum monat: 1-3 jahr ab 2010: 4-7
+volatile uint8_t jahr = 0; // datum monat: 1-3 jahr ab 2010: 4-7
+
 
 /*
  uint8_t EEMEM EETitel;	//HomeCentral
@@ -489,9 +499,9 @@ void solar_browserresult_callback(uint8_t statuscode,uint16_t datapos)
    {
       
       lcd_gotoxy(0,0);
-      lcd_puts("        \0");
+      lcd_puts("      \0");
       lcd_gotoxy(0,0);
-      lcd_puts("s cb OK\0");
+      lcd_puts("s cbOK\0");
       
       web_client_sendok++;
       //				sei();
@@ -500,9 +510,9 @@ void solar_browserresult_callback(uint8_t statuscode,uint16_t datapos)
    else
    {
       lcd_gotoxy(0,0);
-      lcd_puts("        \0");
+      lcd_puts("       \0");
       lcd_gotoxy(0,0);
-      lcd_puts("s cb err\0");
+      lcd_puts("s cberr\0");
       lcd_puthex(statuscode);
       
    }
@@ -515,9 +525,9 @@ void home_browserresult_callback(uint8_t statuscode,uint16_t datapos)
    {
       
       lcd_gotoxy(0,0);
-      lcd_puts("        \0");
+      lcd_puts("      \0");
       lcd_gotoxy(0,0);
-      lcd_puts("h cb OK\0");
+      lcd_puts("h cbOK\0");
       
       web_client_sendok++;
       //				sei();
@@ -526,9 +536,9 @@ void home_browserresult_callback(uint8_t statuscode,uint16_t datapos)
    else
    {
       lcd_gotoxy(0,0);
-      lcd_puts("        \0");
+      lcd_puts("       \0");
       lcd_gotoxy(0,0);
-      lcd_puts("h cb err\0");
+      lcd_puts("h cberr\0");
       lcd_puthex(statuscode);
       
    }
@@ -543,9 +553,9 @@ void alarm_browserresult_callback(uint8_t statuscode,uint16_t datapos)
    {
       
       lcd_gotoxy(0,0);
-      lcd_puts("        \0");
+      lcd_puts("      \0");
       lcd_gotoxy(0,0);
-      lcd_puts("a cb OK\0");
+      lcd_puts("a cbOK\0");
       
       web_client_sendok++;
       //				sei();
@@ -554,9 +564,9 @@ void alarm_browserresult_callback(uint8_t statuscode,uint16_t datapos)
    else
    {
       lcd_gotoxy(0,0);
-      lcd_puts("         \0");
+      lcd_puts("       \0");
       lcd_gotoxy(0,0);
-      lcd_puts("a cb err\0");
+      lcd_puts("a cberr\0");
       lcd_puthex(statuscode);
       
    }
@@ -1181,6 +1191,43 @@ uint16_t print_webpage_status(uint8_t *buf)
 	plen=fill_tcp_data_p(buf,plen,PSTR("<p>  HomeCentral<br>  Falkenstrasse 20<br>  8630 Rueti"));
 	plen=fill_tcp_data_p(buf,plen,PSTR("<hr><h4><font color=\"#00FF00\">Status</h4></font></p>"));
 	
+   /*
+
+    plen=fill_tcp_data_p(buf,plen,PSTR("<p>  HomeCentral<br>  Falkenstrasse 20<br>  8630 Rueti<br>"));
+    
+    // Statustitel
+    plen=fill_tcp_data_p(buf,plen,PSTR("<hr><h3><font color=\"#00FF00\">Status</h3></font></p>"));
+    
+    // Datum
+    char		DatString[7]={};
+    mk_hex2str(DatString,2,tagdesmonats);
+    plen=fill_tcp_data(buf,plen,DatString);
+    
+    plen=fill_tcp_data(buf,plen,":\0");
+    
+    mk_hex2str(DatString,2,monat);
+    plen=fill_tcp_data(buf,plen,DatString);
+    
+    plen=fill_tcp_data(buf,plen," \0");
+    
+    // Jahr
+    plen=fill_tcp_data(buf,plen,"20\0");
+    mk_hex2str(DatString,2,jahr);
+    plen=fill_tcp_data(buf,plen,DatString);
+    
+    plen=fill_tcp_data(buf,plen," \0");
+    
+    //Uhrzeit
+    mk_hex2str(DatString,2,stunde);
+    plen=fill_tcp_data(buf,plen,DatString);
+    
+    plen=fill_tcp_data(buf,plen,":\0");
+    
+    mk_hex2str(DatString,2,minute);
+    plen=fill_tcp_data(buf,plen,DatString);
+    
+
+    */
 	
 	//return(plen);
 	
@@ -1935,7 +1982,16 @@ int main(void)
             
             
          }
-         
+         /*
+          stunde = (inbuffer[46] ); // Stunde, Bit 0-4
+          minute = (inbuffer[47] ); // Minute, Bit 0-5
+          
+          tagdesmonats = inbuffer[40] ; // datum tag
+          
+          monat = (inbuffer[41] & 0x0F ); // datum monat: 1-3 jahr ab 2010: 4-7
+          jahr = ((inbuffer[41] & 0xF0 )>>4) + 10; // datum monat: 1-3 jahr ab 2010: 4-7
+
+          */
          
          // Marker fuer SPI-Event entfernen
          lcd_gotoxy(19,0);
