@@ -1213,7 +1213,7 @@ uint16_t print_webpage_status(uint8_t *buf)
       mk_hex2str(DatString,2,monat);
       plen=fill_tcp_data(buf,plen,DatString);
    }
-   /*
+   
     plen=fill_tcp_data(buf,plen," \0");
     
     // Jahr
@@ -1223,7 +1223,7 @@ uint16_t print_webpage_status(uint8_t *buf)
     
     plen=fill_tcp_data(buf,plen," \0");
     
-    
+    /*
     //Uhrzeit
     mk_hex2str(DatString,2,stunde);
     plen=fill_tcp_data(buf,plen,DatString);
