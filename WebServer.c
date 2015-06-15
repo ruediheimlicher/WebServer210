@@ -1223,16 +1223,16 @@ uint16_t print_webpage_status(uint8_t *buf)
     
     plen=fill_tcp_data(buf,plen," \0");
     
-    /*
+   
     //Uhrzeit
     mk_hex2str(DatString,2,stunde);
     plen=fill_tcp_data(buf,plen,DatString);
     
     plen=fill_tcp_data(buf,plen,":\0");
-    
+   
     mk_hex2str(DatString,2,minute);
     plen=fill_tcp_data(buf,plen,DatString);
-    */
+   
    //return(plen);
    
    
