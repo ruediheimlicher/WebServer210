@@ -1637,14 +1637,6 @@ int main(void)
 	master_init();
 	delay_ms(20);
    
-	lcdinit();
-   
-   delay_ms(20);
-	lcd_puts("Guten Tag \0");
-	lcd_gotoxy(13,0);
-	lcd_puts("V:\0");
-	lcd_puts(VERSION);
-   
 	delay_ms(1600);
 	//lcd_cls();
 	
@@ -1732,6 +1724,15 @@ int main(void)
    
 	Timer0();
    //
+   //delay_ms(1600);
+   lcdinit();
+   
+   delay_ms(20);
+   lcd_puts("Guten Tag \0");
+   lcd_gotoxy(13,0);
+   lcd_puts("V:\0");
+   lcd_puts(VERSION);
+
    lcd_clr_line(1);
    OSZIHI;
    //DDRD = 0xFF;
