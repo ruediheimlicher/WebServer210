@@ -1637,7 +1637,7 @@ int main(void)
 	master_init();
 	delay_ms(20);
    
-	delay_ms(1600);
+	delay_ms(1000);
 	//lcd_cls();
 	
 	TWBR =0;

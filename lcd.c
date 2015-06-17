@@ -51,22 +51,22 @@ void
 lcd_initialize(uint8_t set_function, uint8_t set_entry_mode, uint8_t on)
 {
         /* 20ms delay while LCD powers on */
-        _delay_ms(30);	   
+        _delay_ms(60);
         
         /* Write 0x30 to LCD and wait 5 mS for the instruction to complete */
         lcd_load_byte(0x30);
         lcd_send_cmd();
-        _delay_ms(10);
+        _delay_ms(20);
         
         /* Write 0x30 to LCD and wait 160 uS for instruction to complete */
         lcd_load_byte(0x30);
         lcd_send_cmd();
-        _delay_us(200);
+        _delay_us(400);
         
         /* Write 0x30 AGAIN to LCD and wait 160 uS */
         lcd_load_byte(0x30);
         lcd_send_cmd();
-        _delay_us(160);
+        _delay_us(260);
         
         /* Set function and wait 40uS */
         lcd_load_byte(set_function);
@@ -79,16 +79,16 @@ lcd_initialize(uint8_t set_function, uint8_t set_entry_mode, uint8_t on)
         /* Clear display and wait 1.64mS */
         lcd_load_byte(LCD_CMD_CLEAR);    
         lcd_send_cmd();
-        _delay_ms(4);
+        _delay_ms(8);
         
         /* Set entry mode and wait 40uS */
         lcd_load_byte(set_entry_mode);    
         lcd_send_cmd();
-        _delay_ms(4);
+        _delay_ms(8);
         /* Turn display back on and wait 40uS */
         lcd_load_byte(on);    
         lcd_send_cmd();
-		_delay_ms(40);
+		_delay_ms(80);
 };
 
 /*
