@@ -74,9 +74,11 @@
 #define WDTBIT             7
 #define TASTATURPIN			0           //	Eingang fuer Tastatur
 #define THERMOMETERPIN		1           //	Eingang fuer Thermometer
-#define RELAISPIN          5           //	Ausgang fuer Reset-Relais
 
-#define MASTERCONTROLPIN	4           // Eingang fuer MasterControl: Meldung MasterReset
+#define RELAISPIN          4           //	PORTD Ausgang fuer Reset-Relais
+#define EXTERNPIN          5           //	PORTD Ausgang RJ11
+
+#define MASTERCONTROLPIN	2           // PORTC Eingang fuer MasterControl: Meldung MasterReset
 
 volatile uint8_t rxdata =0;
 volatile uint16_t EventCounter=0;
@@ -169,6 +171,14 @@ volatile uint16_t datcounter=0;
 
 
 volatile uint8_t callbackstatus = 0;
+
+
+#define HOMECALLBACK       0
+#define SOLARCALLBACK       1
+#define ALARMCALLBACK       2
+#define EXPCALLBACK        3
+#define PINGCALLBACK       7
+
 
 volatile uint8_t stunde = 1; // Stunde, Bit 0-4
 volatile uint8_t minute = 1; // Minute, Bit 0-5
@@ -508,6 +518,7 @@ void solar_browserresult_callback(uint8_t statuscode,uint16_t datapos)
       lcd_puts("s cbOK\0");
       
       web_client_sendok++;
+      callbackstatus |= (1<< SOLARCALLBACK); // OK
       //				sei();
       
    }
@@ -518,7 +529,7 @@ void solar_browserresult_callback(uint8_t statuscode,uint16_t datapos)
       lcd_gotoxy(0,0);
       lcd_puts("s cber\0");
       lcd_puthex(statuscode);
-      
+      callbackstatus &= ~(1<< SOLARCALLBACK);
    }
 }
 
@@ -1367,6 +1378,9 @@ void master_init(void)
 	DDRB |= (1<<PORTB0);	//Bit 1 von PORT B als Ausgang für Kontroll-LED
 	PORTB |= (1<<PORTB0);	//Pull-up
 	
+   
+   DDRD = 0xFF; // Port D alle Ausgang
+   
    //	DDRD |=(1<<RELAISPIN); //Pin 5 von Port D als Ausgang fuer Reset-Relais
    //	PORTD |=(1<<RELAISPIN); //HI
 	// Eventuell: PORTD5 verwenden, Relais auf Platine
@@ -1374,7 +1388,7 @@ void master_init(void)
    
 	DDRD &= ~(1<<MASTERCONTROLPIN); // Pin 4 von PORT D als Eingang fuer MasterControl
 	PORTD |= (1<<MASTERCONTROLPIN);	// HI
-	DDRD = 0xFF;
+	//
 	pendenzstatus=0;
 	
 }
@@ -1977,11 +1991,15 @@ int main(void)
 				lcd_puts("iErr \0");
             //		lcd_puthex(inbuffer[24]);	// Read_Err
             //		lcd_puthex(inbuffer[25]);	// Write_Err
-				lcd_puthex(inbuffer[40]);	// tagdesmonats
+				lcd_puthex(inbuffer[5]);
+            lcd_puthex(inbuffer[7]);
+            lcd_putc('*');
+            /*
+            lcd_puthex(inbuffer[40]);	// tagdesmonats
 				lcd_puthex(inbuffer[41]);	// monat, jahr
 				lcd_puthex(inbuffer[46]);	// stunde
 				lcd_puthex(inbuffer[47]);	// minute
-				
+				*/
 			} // in_startdaten
 			
          if ((in_hbdaten==0xFF)&&(in_lbdaten==0xFF)) // Fehler
@@ -2456,7 +2474,8 @@ int main(void)
 					
 					
 					sendWebCount++;
-					
+               callbackstatus &= ~(1<< SOLARCALLBACK);
+
 				}
             
             // +++++++++++++++
