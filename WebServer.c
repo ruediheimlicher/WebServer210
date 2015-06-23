@@ -545,6 +545,8 @@ void home_browserresult_callback(uint8_t statuscode,uint16_t datapos)
       lcd_puts("h cbOK\0");
       
       web_client_sendok++;
+      callbackstatus |= (1<< HOMECALLBACK); // OK
+
       //				sei();
       
    }
@@ -555,7 +557,8 @@ void home_browserresult_callback(uint8_t statuscode,uint16_t datapos)
       lcd_gotoxy(0,0);
       lcd_puts("h cber\0");
       lcd_puthex(statuscode);
-      
+      callbackstatus &= ~(1<< HOMECALLBACK); // Err
+
    }
 }
 
@@ -573,6 +576,8 @@ void alarm_browserresult_callback(uint8_t statuscode,uint16_t datapos)
       lcd_puts("a cbOK\0");
       
       web_client_sendok++;
+      callbackstatus |= (1<< ALARMCALLBACK); // OK
+
       //				sei();
       
    }
@@ -583,7 +588,7 @@ void alarm_browserresult_callback(uint8_t statuscode,uint16_t datapos)
       lcd_gotoxy(0,0);
       lcd_puts("a cber\0");
       lcd_puthex(statuscode);
-      
+      callbackstatus &= ~(1<< ALARMCALLBACK); // Err
    }
 }
 
@@ -1954,7 +1959,7 @@ int main(void)
 			{
 				inbuffer[i]=0;
 			}
-         
+         outbuffer[39] = callbackstatus;
 			// ******************************
 			// Daten auf SPI schieben
 			// ******************************
@@ -2134,7 +2139,7 @@ int main(void)
 					itoa(inbuffer[3]++,d,16);
 					strcat(HeizungDataString,d);
 					
-					strcat(HeizungDataString,"&d4=");
+					strcat(HeizungDataString,"&d4="); // Aussen
 					itoa(inbuffer[4]++,d,16);
 					strcat(HeizungDataString,d);
 					
@@ -2474,7 +2479,7 @@ int main(void)
 					
 					
 					sendWebCount++;
-               callbackstatus &= ~(1<< SOLARCALLBACK);
+               callbackstatus &= ~(1<< SOLARCALLBACK); // bit zuruecksetzen
 
 				}
             
@@ -2502,6 +2507,7 @@ int main(void)
 					//lcd_putint2(strlen(SolarDataString));
 					
 					sendWebCount++;
+               callbackstatus &= ~(1<< HOMECALLBACK); // Bit zuruecksetzewn
 				}
 				
 #pragma mark AlarmDaten an HomeServer schicken
@@ -2526,6 +2532,7 @@ int main(void)
 					//lcd_putint2(strlen(SolarDataString));
 					
 					sendWebCount++;
+               callbackstatus &= ~(1<< ALARMCALLBACK);
 				}
 				
 				if (sendWebCount == 8) // incrementieren
