@@ -28,7 +28,7 @@
 #include "datum.c"
 #include "version.c"
 #include "homedata.c"
-//# include "twimaster.c"
+# include "defines.h"
 //***********************************
 //									*
 //									*
@@ -43,42 +43,7 @@
 
 #define TUXVERSION   1
 
-#define SDAPIN		4
-#define SCLPIN		5
 
-/*
- #define TASTE1		38
- #define TASTE2		46
- #define TASTE3		54
- #define TASTE4		72
- #define TASTE5		95
- #define TASTE6		115
- #define TASTE7		155
- #define TASTE8		186
- #define TASTE9		205
- #define TASTEL		225
- #define TASTE0		235
- #define TASTER		245
- */
-
-#define	LOOPLEDPORT		PORTB
-#define	LOOPLEDPORTPIN	DDRB
-#define	LOOPLED			1
-#define	TWIPIN			0
-
-
-
-#define STARTDELAYBIT		0
-#define HICOUNTBIT			1
-#define CLIENTBIT          3
-#define WDTBIT             7
-#define TASTATURPIN			0           //	Eingang fuer Tastatur
-#define THERMOMETERPIN		1           //	Eingang fuer Thermometer
-
-#define RELAISPIN          4           //	PORTD Ausgang fuer Reset-Relais
-#define EXTERNPIN          5           //	PORTD Ausgang RJ11
-
-#define MASTERCONTROLPIN	2           // PORTC Eingang fuer MasterControl: Meldung MasterReset
 
 volatile uint8_t rxdata =0;
 volatile uint16_t EventCounter=0;
@@ -86,38 +51,6 @@ static char baseurl[]="http://ruediheimlicherhome.dyndns.org/";
 
 
 
-/* *************************************************************************  */
-/* Eigene Deklarationen                                                       */
-/* *************************************************************************  */
-#define NULLTASK					0xB0	// Nichts tun
-#define ERRTASK					0xA0	// F
-
-#define STATUSTASK				0xB1	// Status des TWI aendern
-#define STATUSCONFIRMTASK		0xB2	// Statusaenderung des TWI bestaetigen
-#define EEPROMREADTASK			0xB8	// von EEPROM lesen
-#define EEPROMSENDTASK			0xB9	// Daten vom HomeServer an HomeCentral senden
-#define EEPROMRECEIVETASK		0xB6	// Adresse fuer EEPROM-Write empfangen
-#define EEPROMWRITETASK			0xB7	// auf EEPROM schreiben
-#define EEPROMCONFIRMTASK		0xB5	// Quittung an HomeCentral senden
-#define EEPROMREPORTTASK		0xB4	// Daten vom EEPROM an HomeServer senden
-
-#define EEPROMREADWOCHEATASK	0xBA
-#define EEPROMREADWOCHEBTASK	0xBB
-#define EEPROMREADPWMTASK     0xBC  // Daten fuer PWM-Array im EEPROM holen
-
-#define RESETTASK					0xBF	// HomeCentral reseten
-
-#define DATATASK					0xC0	// Normale Loop im Webserver
-#define SOLARTASK					0xC1	// Daten von solar
-
-#define MASTERERRTASK			0xC7	// Fehlermeldung vom Master senden
-
-
-#define STATUSTIMEOUT			0x0080
-//
-// Eventuell kritische Werte
-#define START_BYTE_DELAY		2				// Timerwert fuer Start-Byte
-#define BYTE_DELAY				2				// Timerwert fuer Data-Byte
 
 volatile uint16_t					timer2_counter=0;
 
@@ -130,14 +63,6 @@ static uint8_t monitoredhost[4] = {10,0,0,7};
 
 //#define STR_BUFFER_SIZE 24
 //static char strbuf_A[STR_BUFFER_SIZE+1];
-
-
-#define TAGPLANBREITE		0x40	// 64 Bytes, 2 page im EEPROM
-#define RAUMPLANBREITE		0x200	// 512 Bytes
-#define twi_buffer_size		8
-#define buffer_size			8
-#define page_size				32
-#define eeprom_buffer_size 8
 
 
 volatile uint8_t	TWI_Pause=1;
@@ -173,12 +98,6 @@ volatile uint16_t datcounter=0;
 volatile uint8_t callbackstatus = 0;
 
 
-#define HOMECALLBACK       0
-#define SOLARCALLBACK       1
-#define ALARMCALLBACK       2
-#define EXPCALLBACK        3
-#define PINGCALLBACK       7
-
 
 volatile uint8_t stunde = 1; // Stunde, Bit 0-4
 volatile uint8_t minute = 1; // Minute, Bit 0-5
@@ -188,14 +107,6 @@ volatile uint8_t jahr = 1; // datum monat: 1-3 jahr ab 2010: 4-7
 
 volatile uint16_t weblencounter=0;
 
-/*
- uint8_t EEMEM EETitel;	//HomeCentral
- uint8_t EEMEM EEAdresse;
- uint8_t EEMEM EEVorlauf;
- uint8_t EEMEM EERuecklauf;
- uint8_t EEMEM EEAussen;
- uint8_t EEMEM EEInnen;
- */
 
 
 
@@ -1386,13 +1297,20 @@ void master_init(void)
    
    DDRD = 0xFF; // Port D alle Ausgang
    
-   //	DDRD |=(1<<RELAISPIN); //Pin 5 von Port D als Ausgang fuer Reset-Relais
-   //	PORTD |=(1<<RELAISPIN); //HI
-	// Eventuell: PORTD5 verwenden, Relais auf Platine
-	
+   DDRD |= (1<<RELAISPIN); //Pin 5 von Port D als Ausgang fuer Reset-Relais
+   PORTD |= (1<<RELAISPIN); //HI
    
-	DDRD &= ~(1<<MASTERCONTROLPIN); // Pin 4 von PORT D als Eingang fuer MasterControl
-	PORTD |= (1<<MASTERCONTROLPIN);	// HI
+   
+   DDRD &= ~(1<<MASTERCONTROLPIN); // Pin 2 von PORT D als Eingang fuer MasterControl
+   PORTD |= (1<<MASTERCONTROLPIN);	// HI
+
+	// Eventuell: PORTD5 verwenden, Relais auf Platine
+
+   DDRC &= ~(1<<EXTERNOUTPUTPIN); // Pin 0 von PORT C als Ausgang fuer RJ11
+   PORTC |= (1<<EXTERNOUTPUTPIN);	// HI
+
+   DDRC &= ~(1<<EXTERNINPUTPIN); // Pin 1 von PORT C als Eingang fuer RJ11
+   PORTC |= (1<<EXTERNINPUTPIN);	// HI
 	//
 	pendenzstatus=0;
 	
@@ -1761,7 +1679,7 @@ int main(void)
 		sei();
 		//Blinkanzeige
 		
-      
+      /*
 		if (PIND & (1<<MASTERCONTROLPIN))               //  Defaultposition: Pin ist HI
 		{
 			// Ende des Reset?
@@ -1797,6 +1715,46 @@ int main(void)
          }
 			
 		}
+      */
+      
+      if (PIND & (1<<MASTERCONTROLPIN))               //  Defaultposition: Pin ist HI
+      {
+         // Ende des Reset?
+         if (pendenzstatus & (1<<RESETDELAY_BIT))     //  Bit ist noch gesetzt, Reset war am laufen
+         {
+            lcd_gotoxy(18,3);
+            lcd_putc(' ');
+
+            pendenzstatus &= ~(1<<RESETDELAY_BIT); //  Bit zuruecksetzen
+            resetcounter = 0;
+         }
+         // sonst: Alles OK, nichts tun
+      }
+      else
+      {
+         resetcounter++;
+         if (!(pendenzstatus & (1<<RESETDELAY_BIT)))  // Bit ist noch nicht gesetzt, Reset hat gerade begonnen
+         {
+            lcd_gotoxy(18,3);
+            lcd_putc('R');
+
+            pendenzstatus |= (1<<RESETDELAY_BIT);     // Bit setzen: Dauer des LO-Impulses messen
+         
+         }
+         
+         if (resetcounter > 0xFFF) // Mastercontrolpin ist sicher LO, Meldung an homecentral
+         {
+            lcd_gotoxy(19,3);
+            lcd_putc('+');
+
+            pendenzstatus &= ~(1<<RESETDELAY_BIT);
+            resetcounter = 0;
+            pendenzstatus |= (1<<RESETREPORT);
+            
+         }
+         
+         
+      }
       
 		loopcount0++;
 		if (loopcount0>=0x2FFF)
@@ -1826,7 +1784,10 @@ int main(void)
 			}
 			LOOPLEDPORT ^=(1<<LOOPLED);
 			
-			
+		PORTD ^= (1<<RELAISPIN); // D5
+
+  //       PORTC ^= (1<<EXTERNOUTPUTPIN);
+
          
          
          
@@ -1969,6 +1930,7 @@ int main(void)
 			lcd_gotoxy(19,0);
 			lcd_putc('*');
          
+         //PORTD &= ~(1<<RELAISPIN);
 			SPI_shift_out();
          
 			
@@ -2047,7 +2009,7 @@ int main(void)
                mk_hex2str(DatString,2,jahr);
                lcd_puts(DatString);
                
-               
+ #pragma mark SolarDataString
                
 					// inbuffer wird vom Master via SPI zum Webserver geschickt.
 					SolarDataString[0]='\0';
@@ -2118,7 +2080,8 @@ int main(void)
                 
                 uebertragen in d5
                 */
-               
+ 
+   #pragma mark HeizungDataString
 					//char d[4]={};
 					strcpy(HeizungDataString,key1);
 					strcat(HeizungDataString,sstr);
@@ -2164,7 +2127,8 @@ int main(void)
                // inbuffer wird vom Master via SPI zum Webserver geschickt.
                
                // AlarmDataString geht an alarm.pl
-               
+
+   #pragma mark AlarmDataString
 					AlarmDataString[0]='\0';
 					strcpy(AlarmDataString,"pw=");
 					strcat(AlarmDataString,"Pong");
@@ -2188,10 +2152,13 @@ int main(void)
 					itoa(inbuffer[29]++,d,16);
 					strcat(AlarmDataString,d);
 					
-               // txbuffer[0] von Heizung: Stundencode l 2807
+               // pendenzstatus
 					strcat(AlarmDataString,"&d3=");
-					itoa(inbuffer[28]++,d,16);
+					//itoa(inbuffer[28]++,d,16);
+               itoa(pendenzstatus++,d,16);
 					strcat(AlarmDataString,d);
+                    
+               pendenzstatus &= ~(1<<RESETREPORT);
 					
                // HeizungStundencode l 2773
 					strcat(AlarmDataString,"&d4=");
@@ -2402,6 +2369,7 @@ int main(void)
 			//PORTD |=(1<<3);
 			//webspistatus &= ~(1<<SPI_SHIFT_BIT);
 			//
+         //PORTD |= (1<<RELAISPIN);
 		}														// ** Ende SPI-Routinen  *************************
 		else				// Normalfall, kein shift-Bit gesetzt
 		{
@@ -2449,7 +2417,7 @@ int main(void)
 					//delay_ms(1000);
 					
 					//strcat(urlvarstr,"data=
-					client_browse_url(PSTR("/cgi-bin/solar.pl?pw="),urlvarstr,PSTR(WEBSERVER_VHOST),&ping_callback);
+					client_browse_url((char*)PSTR("/cgi-bin/solar.pl?pw="),urlvarstr,PSTR(WEBSERVER_VHOST),&ping_callback);
 					//client_browse_url(PSTR("/blatt/cgi-bin/home.pl?"),urlvarstr,PSTR(WEBSERVER_VHOST),&browserresult_callback);
 					
 				}
@@ -2498,7 +2466,7 @@ int main(void)
                lcd_putc('h');
 				
 					// Daten an Home schicken
-					client_browse_url(PSTR("/cgi-bin/home.pl?"),HeizungDataString,(char*)PSTR(WEBSERVER_VHOST),&home_browserresult_callback);
+					client_browse_url((char*)PSTR("/cgi-bin/home.pl?"),HeizungDataString,(char*)PSTR(WEBSERVER_VHOST),&home_browserresult_callback);
                
                
                //client_browse_url("/cgi-bin/home.pl?",HeizungDataString,WEBSERVER_VHOST,&home_browserresult_callback);
@@ -2523,7 +2491,7 @@ int main(void)
                lcd_putc('a');
 
 					// Daten an Alarm schicken
-					client_browse_url(PSTR("/cgi-bin/alarm.pl?"),AlarmDataString,(char*)PSTR(WEBSERVER_VHOST),&alarm_browserresult_callback);
+					client_browse_url((char*)PSTR("/cgi-bin/alarm.pl?"),AlarmDataString,(char*)PSTR(WEBSERVER_VHOST),&alarm_browserresult_callback);
                
                
                //client_browse_url("/cgi-bin/alarm.pl?",AlarmDataString,WEBSERVER_VHOST,&alarm_browserresult_callback);

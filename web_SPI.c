@@ -56,6 +56,7 @@ static volatile uint8_t						SendErrCounter=0x00;
 static volatile uint8_t						IncompleteCounter=0x00;
 static volatile uint16_t					TimeoutCounter=0x00;
 static volatile uint16_t					SPI_ErrCounter=0x00;
+static volatile uint16_t					resetcounter=0x00; // counter fuer Dauer reset-meldeimpuls vom Master
 // ************************************************
 // defines fuer spistatus
 #define ACTIVE_BIT				0
@@ -70,7 +71,7 @@ static volatile uint16_t					SPI_ErrCounter=0x00;
 // defines fuer pendenzstatus
 #define SEND_STATUS0_BIT		0	// Ankuendigen, dass in web-Schlaufe die Confirm-Status0-page geschickt wird
 #define RESETDELAY_BIT			7	// Anzeige, dass ein Hardware-Reset im Gang ist.
-
+#define RESETREPORT           6 // Anzeige, dass ein reset erfolgte. Meldung an homecentral schicken
 
 
 #define CS_HC_PASSIVE			SPI_CONTROL_PORT |= (1<< SPI_CONTROL_CS_HC)	// CS fuer HC ist HI
