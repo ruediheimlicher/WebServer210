@@ -121,6 +121,7 @@ void tempbis99(uint16_t temperatur,char*tempbuffer);
 // the password string (only the first 5 char checked), (only a-z,0-9,_ characters):
 static char password[10]="ideur00"; // must not be longer than 9 char
 static char resetpassword[10]="ideur!00!"; // must not be longer than 9 char
+static char taskstring[10]="homer"; // must not be longer than 9 char
 
 
 uint8_t TastenStatus=0;
@@ -229,6 +230,8 @@ static uint8_t web_client_sendok=0;
 static volatile uint8_t sec=0;
 static volatile uint8_t cnt2step=0;
 
+
+volatile uint8_t d3counter=0;
 
 
 #define tag_start_adresse 0
@@ -519,16 +522,31 @@ uint8_t verify_password(char *str)
 }
 
 
+
+
 uint8_t verify_reset_password(char *str)
 {
 	// the first characters of the received string are
 	// a simple password/cookie:
-	if (strncmp(resetpassword,str,7)==0)
+	if (strncmp(resetpassword,str,9)==0)
    {
 		return(1); // Reset-PW OK
 	}
 	return(0); //Reset-PW falsch
 }
+
+uint8_t verify_task(char *str)
+{
+   // the first characters of the received string are
+   // a simple password/cookie:
+   
+   if (strncmp(taskstring,str,5)==0)
+   {
+      return(1);                 // task OK
+   }
+   return(0);                    //task falsch
+}
+
 
 
 void delay_ms(unsigned int ms)/* delay for a minimum of <ms> */
@@ -973,9 +991,31 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
 					return (10);
 				}
 				
-            if (find_key_val(str,actionbuf,10,"reset")) // HomeCentral reseten
+            if (find_key_val(str,actionbuf,10,"task")) // HomeCentral reseten
             {
-               
+               if (verify_task(actionbuf))
+               {
+                  lcd_gotoxy(18,0);
+                  lcd_putc('T');
+                  char* buffer= malloc(32);
+                  
+                  strcpy(buffer, actionbuf);
+                  uint8_t index=0;
+                  char* linePtr = malloc(32);
+               uint8_t taskstring[16] = {};
+                  linePtr = strtok(buffer,"+");
+                  
+                  while ((linePtr !=NULL)&& (index<12))								// Datenstring: Bei '+' trennen
+                  {
+                     taskstring[index++] = strtol(linePtr,NULL,16); //http://www.mkssoftware.com/docs/man3/strtol.3.asp
+                     linePtr = strtok(NULL,"+");
+                  }
+                  
+                  free(linePtr);
+                  free(buffer);
+                  return 11;
+               }
+               return 0;
             }
             
             if (find_key_val(str,actionbuf,10,"servo")) // Master soll Daten fuer PCM-Array im Master holen
@@ -1717,22 +1757,28 @@ int main(void)
 		}
       */
       
-      if (PIND & (1<<MASTERCONTROLPIN))               //  Defaultposition: Pin ist HI
+      if (PIND & (1<<MASTERCONTROLPIN))               //  Defaultposition: Pin ist HI, nichts tun
       {
          // Ende des Reset?
          if (pendenzstatus & (1<<RESETDELAY_BIT))     //  Bit ist noch gesetzt, Reset war am laufen
          {
-            lcd_gotoxy(18,3);
-            lcd_putc(' ');
+            //lcd_gotoxy(18,3);
+            //lcd_putc('-');
 
-            pendenzstatus &= ~(1<<RESETDELAY_BIT); //  Bit zuruecksetzen
-            resetcounter = 0;
+            //pendenzstatus &= ~(1<<RESETDELAY_BIT); //  Bit zuruecksetzen
+            //pendenzstatus &= ~(1<<RESETREPORT);
+            //resetcounter = 0;
          }
+         
          // sonst: Alles OK, nichts tun
       }
       else
       {
-         resetcounter++;
+         if ((resetcounter < 0xFFF)&&(pendenzstatus & (1<<RESETDELAY_BIT)))
+         {
+            resetcounter++;
+         }
+         
          if (!(pendenzstatus & (1<<RESETDELAY_BIT)))  // Bit ist noch nicht gesetzt, Reset hat gerade begonnen
          {
             lcd_gotoxy(18,3);
@@ -1742,7 +1788,10 @@ int main(void)
          
          }
          
-         if (resetcounter > 0xFFF) // Mastercontrolpin ist sicher LO, Meldung an homecentral
+         //lcd_gotoxy(12,3);
+         //lcd_putint12(resetcounter);
+         
+         if (resetcounter > 0x0F) // Mastercontrolpin ist sicher LO, Meldung an homecentral
          {
             lcd_gotoxy(19,3);
             lcd_putc('+');
@@ -1750,7 +1799,7 @@ int main(void)
             pendenzstatus &= ~(1<<RESETDELAY_BIT);
             resetcounter = 0;
             pendenzstatus |= (1<<RESETREPORT);
-            
+            d3counter++;
          }
          
          
@@ -1954,13 +2003,13 @@ int main(void)
 				}
 				
 				// Fehlerbytes
-				lcd_gotoxy(0,3);
-				lcd_puts("iErr \0");
+				//lcd_gotoxy(0,3);
+				//lcd_puts("iErr \0");
             //		lcd_puthex(inbuffer[24]);	// Read_Err
             //		lcd_puthex(inbuffer[25]);	// Write_Err
-				lcd_puthex(inbuffer[5]);
-            lcd_puthex(inbuffer[7]);
-            lcd_putc('*');
+				//lcd_puthex(inbuffer[5]);
+            //lcd_puthex(inbuffer[7]);
+            //lcd_putc('*');
             /*
             lcd_puthex(inbuffer[40]);	// tagdesmonats
 				lcd_puthex(inbuffer[41]);	// monat, jahr
@@ -2153,13 +2202,18 @@ int main(void)
 					strcat(AlarmDataString,d);
 					
                // pendenzstatus
+               lcd_gotoxy(0,3);
+               lcd_puts("d3 \0");
+               lcd_puthex(pendenzstatus);
 					strcat(AlarmDataString,"&d3=");
 					//itoa(inbuffer[28]++,d,16);
-               itoa(pendenzstatus++,d,16);
+               itoa(pendenzstatus,d,16);
+               //lcd_putc(' ');
+               //lcd_puts(d);
 					strcat(AlarmDataString,d);
-                    
-               pendenzstatus &= ~(1<<RESETREPORT);
-					
+               lcd_putc(' ');
+               lcd_puthex(d3counter);
+
                // HeizungStundencode l 2773
 					strcat(AlarmDataString,"&d4=");
 					itoa(inbuffer[27]++,d,16);
@@ -2439,8 +2493,8 @@ int main(void)
 					start_web_client=0;
 					
 					
-               lcd_gotoxy(11,0);
-               lcd_putc('s');
+               //lcd_gotoxy(11,0);
+               //lcd_putc('s');
 
 					// Daten an Solar schicken
 					client_browse_url((char*)PSTR("/cgi-bin/solar.pl?"),SolarDataString,(char*)PSTR(WEBSERVER_VHOST),&solar_browserresult_callback);
@@ -2462,8 +2516,8 @@ int main(void)
 					
 					start_web_client=0;
 					
-               lcd_gotoxy(11,0);
-               lcd_putc('h');
+               //lcd_gotoxy(11,0);
+               //lcd_putc('h');
 				
 					// Daten an Home schicken
 					client_browse_url((char*)PSTR("/cgi-bin/home.pl?"),HeizungDataString,(char*)PSTR(WEBSERVER_VHOST),&home_browserresult_callback);
@@ -2487,12 +2541,20 @@ int main(void)
 					
 					start_web_client=0;
 					
-               lcd_gotoxy(11,0);
-               lcd_putc('a');
+               //lcd_gotoxy(11,0);
+               //lcd_putc('a');
 
 					// Daten an Alarm schicken
 					client_browse_url((char*)PSTR("/cgi-bin/alarm.pl?"),AlarmDataString,(char*)PSTR(WEBSERVER_VHOST),&alarm_browserresult_callback);
                
+               if (pendenzstatus & (1<<RESETREPORT))
+               {
+                  pendenzstatus &= ~(1<<RESETREPORT);
+                  lcd_gotoxy(18,3);
+                  lcd_putc(' ');
+                  lcd_putc(' ');
+               }
+
                
                //client_browse_url("/cgi-bin/alarm.pl?",AlarmDataString,WEBSERVER_VHOST,&alarm_browserresult_callback);
 
@@ -2835,6 +2897,12 @@ int main(void)
 					}
 					
 				}
+            
+            else if (cmd == 11) // Task angekommen
+            {
+               lcd_gotoxy(19,0);
+               lcd_putc('+');
+            }
 				
 				else
 				{
