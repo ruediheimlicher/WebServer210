@@ -539,11 +539,16 @@ uint8_t verify_task(char *str)
 {
    // the first characters of the received string are
    // a simple password/cookie:
-   
+   lcd_gotoxy(0,3);
+   //lcd_putc(str[0]);
+   lcd_puts(str);
+
    if (strncmp(taskstring,str,5)==0)
    {
+      lcd_putc('1');
       return(1);                 // task OK
    }
+   lcd_putc('0');
    return(0);                    //task falsch
 }
 
@@ -990,19 +995,27 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
 					lcd_putc('*');
 					return (10);
 				}
-				
-            if (find_key_val(str,actionbuf,10,"task")) // HomeCentral reseten
+	#pragma mark task
+            if (find_key_val(str,actionbuf,12,"task")) // HomeCentral reseten
             {
+               //lcd_gotoxy(10,0);
+               //lcd_putc('X');
+               //lcd_gotoxy(10,3);
+               //lcd_putc(actionbuf[0]);
+               //lcd_putc(actionbuf[1]);
+              
+               //return 11;
                if (verify_task(actionbuf))
                {
-                  lcd_gotoxy(18,0);
-                  lcd_putc('T');
+                  //lcd_gotoxy(0,0);
+                  //lcd_putc('T');
+                  return 11;
                   char* buffer= malloc(32);
                   
                   strcpy(buffer, actionbuf);
                   uint8_t index=0;
                   char* linePtr = malloc(32);
-               uint8_t taskstring[16] = {};
+                  uint8_t taskstring[16] = {};
                   linePtr = strtok(buffer,"+");
                   
                   while ((linePtr !=NULL)&& (index<12))								// Datenstring: Bei '+' trennen
@@ -1010,11 +1023,18 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
                      taskstring[index++] = strtol(linePtr,NULL,16); //http://www.mkssoftware.com/docs/man3/strtol.3.asp
                      linePtr = strtok(NULL,"+");
                   }
-                  
+                  //lcd_gotoxy(10,3);
+                  //lcd_putc(taskstring[0]);
+                  //lcd_putc(taskstring[1]);
                   free(linePtr);
                   free(buffer);
                   return 11;
                }
+               else
+               {
+                  return 12;
+               }
+               
                return 0;
             }
             
@@ -1706,10 +1726,13 @@ int main(void)
    
    delay_ms(20);
    lcd_puts("Guten Tag \0");
+   delay_ms(1000);
+   lcd_clr_line(0);
    lcd_gotoxy(13,0);
    lcd_puts("V:\0");
    lcd_puts(VERSION);
 
+   
    lcd_clr_line(1);
    OSZIHI;
    //DDRD = 0xFF;
@@ -1833,7 +1856,7 @@ int main(void)
 			}
 			LOOPLEDPORT ^=(1<<LOOPLED);
 			
-		PORTD ^= (1<<RELAISPIN); // D5
+		//PORTD ^= (1<<RELAISPIN); // D5
 
   //       PORTC ^= (1<<EXTERNOUTPUTPIN);
 
@@ -2051,12 +2074,12 @@ int main(void)
                
                monat = (inbuffer[41] & 0x0F ); // datum monat: 1-3 jahr ab 2010: 4-7
                jahr = ((inbuffer[41] & 0xF0 )>>4) + 10; // datum monat: 1-3 jahr ab 2010: 4-7
-               lcd_gotoxy(7,0);
+               //lcd_gotoxy(7,0);
                //lcd_puthex(monat);
-               lcd_puthex(jahr);
+               //lcd_puthex(jahr);
                char		DatString[7]={};
                mk_hex2str(DatString,2,jahr);
-               lcd_puts(DatString);
+               //lcd_puts(DatString);
                
  #pragma mark SolarDataString
                
@@ -2072,38 +2095,38 @@ int main(void)
 					char d[5]={};
 					//char dd[4]={};
 					strcat(SolarDataString,"&d0=");
-					itoa(inbuffer[9]++,d,16);
+					itoa(inbuffer[9],d,16);
 					strcat(SolarDataString,d);
 					
 					strcat(SolarDataString,"&d1=");
-					itoa(inbuffer[10]++,d,16);
+					itoa(inbuffer[10],d,16);
 					strcat(SolarDataString,d);
 					
 					strcat(SolarDataString,"&d2=");
-					itoa(inbuffer[11]++,d,16);
+					itoa(inbuffer[11],d,16);
 					strcat(SolarDataString,d);
 					
 					strcat(SolarDataString,"&d3=");
-					itoa(inbuffer[12]++,d,16);
+					itoa(inbuffer[12],d,16);
 					strcat(SolarDataString,d);
 					
 					strcat(SolarDataString,"&d4=");
-					itoa(inbuffer[13]++,d,16);
+					itoa(inbuffer[13],d,16);
 					strcat(SolarDataString,d);
 					
 					
 					strcat(SolarDataString,"&d5=");
-					itoa(inbuffer[14]++,d,16);
+					itoa(inbuffer[14],d,16);
 					strcat(SolarDataString,d);
 					
 					
 					strcat(SolarDataString,"&d6=");
-					itoa(inbuffer[15]++,d,16);
+					itoa(inbuffer[15],d,16);
 					strcat(SolarDataString,d);
 					
 					
 					strcat(SolarDataString,"&d7=");
-					itoa(inbuffer[16]++,d,16);
+					itoa(inbuffer[16],d,16);
 					strcat(SolarDataString,d);
 					
 					
@@ -2202,17 +2225,17 @@ int main(void)
 					strcat(AlarmDataString,d);
 					
                // pendenzstatus
-               lcd_gotoxy(0,3);
-               lcd_puts("d3 \0");
-               lcd_puthex(pendenzstatus);
+               //lcd_gotoxy(0,3);
+               //lcd_puts("d3 \0");
+               //lcd_puthex(pendenzstatus);
 					strcat(AlarmDataString,"&d3=");
 					//itoa(inbuffer[28]++,d,16);
                itoa(pendenzstatus,d,16);
                //lcd_putc(' ');
                //lcd_puts(d);
 					strcat(AlarmDataString,d);
-               lcd_putc(' ');
-               lcd_puthex(d3counter);
+               //lcd_putc(' ');
+               //lcd_puthex(d3counter);
 
                // HeizungStundencode l 2773
 					strcat(AlarmDataString,"&d4=");
@@ -2897,11 +2920,23 @@ int main(void)
 					}
 					
 				}
-            
+#pragma mark cmd 11
             else if (cmd == 11) // Task angekommen
             {
-               lcd_gotoxy(19,0);
+               //lcd_gotoxy(11,0);
+               //lcd_putc('+');
+               //dat_p = print_webpage_ok(buf,(void*)"task");
+               dat_p = print_webpage_ok(buf,(void*)"taskok");
+               PORTD &= ~(1<<RELAISPIN);
+               
+            }
+            else if (cmd == 12) // Task nicht angekommen
+            {
+               lcd_gotoxy(11,0);
                lcd_putc('+');
+               //dat_p = print_webpage_ok(buf,(void*)"task");
+               dat_p = print_webpage_ok(buf,(void*)"task0");
+               
             }
 				
 				else
