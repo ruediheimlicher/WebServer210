@@ -2092,6 +2092,17 @@ int main(void)
 					strcpy(SolarDataString,key1);
 					strcat(SolarDataString,sstr);
 					
+               
+               /*
+                d0   vorlauf
+                d1   ruecklauf
+                d2   boiler u
+                d3   boiler m
+                d4   boler o
+                d5   kollektor
+                d6   3 pumpe/elektro 4/alarm 7
+                d7   errors/overrun
+                */
 					char d[5]={};
 					//char dd[4]={};
 					strcat(SolarDataString,"&d0=");
@@ -2121,14 +2132,20 @@ int main(void)
 					
 					
 					strcat(SolarDataString,"&d6=");
-					itoa(inbuffer[15],d,16);
+               itoa(inbuffer[15],d,16);
 					strcat(SolarDataString,d);
 					
-					
+               lcd_gotoxy(0,3);
+               lcd_puts("s d7 \0");
+               lcd_puthex(inbuffer[16]);
+
 					strcat(SolarDataString,"&d7=");
 					itoa(inbuffer[16],d,16);
 					strcat(SolarDataString,d);
 					
+               //uint8_t l= strlen(SolarDataString);
+               
+               
 					
 					HeizungDataString[0]='\0';
 					
@@ -2159,38 +2176,38 @@ int main(void)
 					strcat(HeizungDataString,sstr);
 					
 					strcpy(HeizungDataString,"&d0=");
-					itoa(inbuffer[0]++,d,16);
+					itoa(inbuffer[0],d,16);
 					strcat(HeizungDataString,d);
 					
 					strcat(HeizungDataString,"&d1=");
-					itoa(inbuffer[1]++,d,16);
+					itoa(inbuffer[1],d,16);
 					strcat(HeizungDataString,d);
 					
 					strcat(HeizungDataString,"&d2=");
-					itoa(inbuffer[2]++,d,16);
+					itoa(inbuffer[2],d,16);
 					strcat(HeizungDataString,d);
 					
 					strcat(HeizungDataString,"&d3=");
-					itoa(inbuffer[3]++,d,16);
+					itoa(inbuffer[3],d,16);
 					strcat(HeizungDataString,d);
 					
 					strcat(HeizungDataString,"&d4="); // Aussen
-					itoa(inbuffer[4]++,d,16);
+					itoa(inbuffer[4],d,16);
 					strcat(HeizungDataString,d);
 					
 					
 					strcat(HeizungDataString,"&d5=");
-					itoa(inbuffer[5]++,d,16);
+					itoa(inbuffer[5],d,16);
 					strcat(HeizungDataString,d);
 					
 					
 					strcat(HeizungDataString,"&d6=");
-					itoa(inbuffer[6]++,d,16);
+					itoa(inbuffer[6],d,16);
 					strcat(HeizungDataString,d);
 					
 					
 					strcat(HeizungDataString,"&d7=");
-					itoa(inbuffer[7]++,d,16);
+					itoa(inbuffer[7],d,16);
 					strcat(HeizungDataString,d);
 					
 					//key1="pw=\0";
@@ -2211,17 +2228,17 @@ int main(void)
                // TIEFKUEHLALARM        3
                // WASSERALARMKELLER     4
                strcat(AlarmDataString,"&d0=");
-					itoa(inbuffer[31]++,d,16);
+					itoa(inbuffer[31],d,16);
 					strcat(AlarmDataString,d);
                
                // TWI-errcount Master> main> l 1672
 					strcat(AlarmDataString,"&d1=");
-					itoa(inbuffer[30]++,d,16);
+					itoa(inbuffer[30],d,16);
 					strcat(AlarmDataString,d);
 					
                // Echo von WoZi
 					strcat(AlarmDataString,"&d2=");
-					itoa(inbuffer[29]++,d,16);
+					itoa(inbuffer[29],d,16);
 					strcat(AlarmDataString,d);
 					
                // pendenzstatus
@@ -2239,24 +2256,24 @@ int main(void)
 
                // HeizungStundencode l 2773
 					strcat(AlarmDataString,"&d4=");
-					itoa(inbuffer[27]++,d,16);
+					itoa(inbuffer[27],d,16);
 					strcat(AlarmDataString,d);
 					
 					strcat(AlarmDataString,"&d5=");
-					itoa(inbuffer[26]++,d,16);
+					itoa(inbuffer[26],d,16);
 					strcat(AlarmDataString,d);
                
 					strcat(AlarmDataString,"&d6=");
-					itoa(inbuffer[25]++,d,16);
+					itoa(inbuffer[25],d,16);
 					strcat(AlarmDataString,d);
                
 					strcat(AlarmDataString,"&d7=");
-					itoa(inbuffer[24]++,d,16);
+					itoa(inbuffer[24],d,16);
 					strcat(AlarmDataString,d);
                
                // Zeit.minute, 6 bit
 					strcat(AlarmDataString,"&d8=");
-					itoa(inbuffer[23]++,d,16);
+					itoa(inbuffer[23],d,16);
 					strcat(AlarmDataString,d);
 					
 					
@@ -2264,12 +2281,12 @@ int main(void)
                //					uint8_t diff=(errCounter-oldErrCounter);
                //					itoa(diff++,d,16); // nur Differenz übermitteln
                
-					itoa(errCounter++,d,16);
+					itoa(errCounter,d,16);
 					strcat(AlarmDataString,d);
 					//oldErrCounter = errCounter;
 					
 					strcat(AlarmDataString,"&d10=");
-					itoa(SPI_ErrCounter++,d,16);
+					itoa(SPI_ErrCounter,d,16);
 					strcat(AlarmDataString,d);
 					
                
