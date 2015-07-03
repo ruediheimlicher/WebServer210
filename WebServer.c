@@ -2135,14 +2135,17 @@ int main(void)
                itoa(inbuffer[15],d,16);
 					strcat(SolarDataString,d);
 					
-               lcd_gotoxy(0,3);
-               lcd_puts("s d7 \0");
-               lcd_puthex(inbuffer[16]);
+               
 
 					strcat(SolarDataString,"&d7=");
 					itoa(inbuffer[16],d,16);
 					strcat(SolarDataString,d);
-					
+
+               lcd_gotoxy(0,3);
+               //lcd_puts("s \0");
+               lcd_puthex(inbuffer[15]);
+               lcd_puthex(inbuffer[16]);
+
                //uint8_t l= strlen(SolarDataString);
                
                
@@ -2511,7 +2514,7 @@ int main(void)
 					//delay_ms(1000);
 					
 					//strcat(urlvarstr,"data=
-					client_browse_url((char*)PSTR("/cgi-bin/solar.pl?pw="),urlvarstr,PSTR(WEBSERVER_VHOST),&ping_callback);
+		//			client_browse_url((char*)PSTR("/cgi-bin/solar.pl?pw="),urlvarstr,PSTR(WEBSERVER_VHOST),&ping_callback);
 					//client_browse_url(PSTR("/blatt/cgi-bin/home.pl?"),urlvarstr,PSTR(WEBSERVER_VHOST),&browserresult_callback);
 					
 				}
