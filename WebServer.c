@@ -1000,13 +1000,17 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
             // Auslesen der Daten
             if (find_key_val(str,actionbuf,10,"data")) // HomeCentral reseten
             {
-               if (actionbuf[0]=='0') // data
+               if (actionbuf[0]=='0') // data solar
+               {
+                  return (25);
+               }
+               if (actionbuf[0]=='1') // data home
                {
                   return (26);
                }
-               if (actionbuf[0]=='1') // data
+               if (actionbuf[0]=='2') // data alarm
                {
-                  return (25);
+                  return (27);
                }
                
             }
@@ -1363,6 +1367,16 @@ uint16_t print_webpage_status(uint8_t *buf)
     plen=fill_tcp_data_p(buf,plen,PSTR("\n</pre><br><hr>"));
     */
    return(plen);
+}
+
+uint16_t print_webpage_data(uint8_t *buf,uint8_t *data)
+{
+   // Schickt die Daten an den cronjob
+   uint16_t plen=0;
+   plen=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nPragma: no-cache\r\n\r\n"));
+   plen=fill_tcp_data(buf,plen,(void*)data);
+   
+   return plen;
 }
 
 void master_init(void)
@@ -2983,12 +2997,26 @@ int main(void)
 #pragma mark cron-Stuff cmd 25
             // cron-Stuff
             
-            else if (cmd == 25)	// Data lesen
+            else if (cmd == 25)	// Data solar lesen
             {
 #pragma mark cmd 25
                dat_p=http200ok(); // Header setzen
                dat_p=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<h1>200 OK</h1>"));
+               dat_p = print_webpage_data(buf,(void*)SolarDataString); // pw=Pong&strom=1234
+            }
+            else if (cmd == 26)	// Data home lesen
+            {
+#pragma mark cmd 26
+               dat_p=http200ok(); // Header setzen
+               dat_p=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<h1>200 OK</h1>"));
                dat_p = print_webpage_data(buf,(void*)HeizungDataString); // pw=Pong&strom=1234
+            }
+            else if (cmd == 27)	// Data alarm lesen
+            {
+#pragma mark cmd 27
+               dat_p=http200ok(); // Header setzen
+               dat_p=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<h1>200 OK</h1>"));
+               dat_p = print_webpage_data(buf,(void*)AlarmDataString); // pw=Pong&strom=1234
             }
 
             // end cron_Stuff
