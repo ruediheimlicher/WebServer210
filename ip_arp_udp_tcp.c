@@ -911,6 +911,7 @@ void client_browse_url(char *urlbuf, char *urlbuf_varpart, char *hoststr,void (*
 	client_state=1; // send a syn
 	browsertype=0;
 }
+
 // client web browser using http POST operation:
 // additionalheaderline must be set to NULL if not used.
 // postval is a string buffer which can only be de-allocated by the caller 

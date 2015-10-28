@@ -995,6 +995,23 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
 					lcd_putc('*');
 					return (10);
 				}
+   #pragma mark Data    
+            
+            // Auslesen der Daten
+            if (find_key_val(str,actionbuf,10,"data")) // HomeCentral reseten
+            {
+               if (actionbuf[0]=='0') // data
+               {
+                  return (26);
+               }
+               if (actionbuf[0]=='1') // data
+               {
+                  return (25);
+               }
+               
+            }
+
+            
 	#pragma mark task
             if (find_key_val(str,actionbuf,12,"task")) // HomeCentral reseten
             {
@@ -1096,10 +1113,12 @@ uint16_t print_webpage_ok(uint8_t *buf,uint8_t *okcode)
 	// Schickt den okcode als Bestaetigung fuer den Empfang des Requests
 	uint16_t plen;
 	plen=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nPragma: no-cache\r\n\r\n"));
-	plen=fill_tcp_data_p(buf,plen,PSTR("<p>okcode="));
+	plen=fill_tcp_data_p(buf,plen,PSTR("okcode="));
 	plen=fill_tcp_data(buf,plen,(void*)okcode);
 	return plen;
 }
+
+
 
 
 
@@ -1556,6 +1575,9 @@ int main(void)
    
    if (TESTSERVER)
    {
+      
+      myip[3] = 213;
+
    }
    
 
@@ -2958,6 +2980,18 @@ int main(void)
                dat_p = print_webpage_ok(buf,(void*)"task0");
                
             }
+#pragma mark cron-Stuff cmd 25
+            // cron-Stuff
+            
+            else if (cmd == 25)	// Data lesen
+            {
+#pragma mark cmd 25
+               dat_p=http200ok(); // Header setzen
+               dat_p=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<h1>200 OK</h1>"));
+               dat_p = print_webpage_data(buf,(void*)HeizungDataString); // pw=Pong&strom=1234
+            }
+
+            // end cron_Stuff
 				
 				else
 				{
