@@ -325,7 +325,11 @@ ISR(TIMER0_COMPA_vect)
 		//lcd_puthex(webspistatus);
 		if (!(webspistatus & (1<<TWI_WAIT_BIT)))        // TWI soll laufen
 		{
-			webspistatus |= (1<< SPI_SHIFT_BIT);         // shift_out veranlassen
+    //     if (cronstatus & (1<<CRON_HOME)) // eventuell nach xxx verschieben
+         {
+            webspistatus |= (1<< SPI_SHIFT_BIT);         // shift_out veranlassen
+   //         cronstatus &=  ~ (1<<CRON_HOME); // nur ein shift-out nach cron-Request
+         }
 		}
       
 		if (webspistatus & (1<<TWI_STOP_REQUEST_BIT))	// Gesetzt in cmd=2: Vorgang Status0 von HomeServer ist angemeldet
@@ -343,7 +347,7 @@ ISR(TIMER0_COMPA_vect)
          
 			webspistatus &= ~(1<<SPI_STATUS0_BIT);			//Bit zuruecksetzen
 		}
-		
+		// xxx
 		
 	}
    
@@ -1268,7 +1272,7 @@ uint16_t print_webpage_status(uint8_t *buf)
    //char	AussenTemperaturString[7];
    Temperatur=0;
    //Temperatur=WebRxDaten[4];
-   Temperatur=inbuffer[4];
+   Temperatur=inbuffer[4]; // aussen
    //lcd_gotoxy(10,1);
    //lcd_putc(' ');
    //lcd_puthex(Temperatur);
@@ -1372,12 +1376,23 @@ uint16_t print_webpage_status(uint8_t *buf)
 uint16_t print_webpage_data(uint8_t *buf,uint8_t *data)
 {
    // Schickt die Daten an den cronjob
-   uint16_t plen=0;
-   plen=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nPragma: no-cache\r\n\r\n"));
+   uint16_t plen=http200ok;
+   //plen=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nPragma: no-cache\r\n\r\n"));
    plen=fill_tcp_data(buf,plen,(void*)data);
    
    return plen;
 }
+
+uint16_t print_webpage_wait(uint8_t *buf,uint8_t *data) // Wait auf Ende Webinterface-Event
+{
+   // Schickt wait an den cronjob
+   uint16_t plen=http200ok;
+   //plen=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nPragma: no-cache\r\n\r\n"));
+   plen=fill_tcp_data(buf,plen,(void*)"wait");
+   
+   return plen;
+}
+
 
 void master_init(void)
 {
@@ -1773,6 +1788,9 @@ int main(void)
    OSZIHI;
    //DDRD = 0xFF;
 #pragma  mark "while"
+   
+   cronstatus=0;
+   
 	while(1)
 	{
 		sei();
@@ -1899,7 +1917,7 @@ int main(void)
          
          
          
-         if (webspistatus & (1<<TWI_WAIT_BIT))       // TWI ist aus, Timout ist am laufen, Sicherheit fuer wieder einschalten, wenn vergessen
+         if (webspistatus & (1<<TWI_WAIT_BIT))  // TWI ist aus, Timout ist am laufen, Sicherheit fuer wieder einschalten, wenn vergessen
          {
 				lcd_gotoxy(0,0);
 				lcd_puthex(TimeoutCounter);
@@ -2214,19 +2232,20 @@ int main(void)
 					strcpy(HeizungDataString,key1);
 					strcat(HeizungDataString,sstr);
 					
-					strcpy(HeizungDataString,"&d0=");
+               strcpy(HeizungDataString,"&d0="); //Bit 0-4: Stunde, 5 bit     Bit 5-7: Raumnummer
+ 
 					itoa(inbuffer[0],d,16);
 					strcat(HeizungDataString,d);
 					
-					strcat(HeizungDataString,"&d1=");
+					strcat(HeizungDataString,"&d1="); //
 					itoa(inbuffer[1],d,16);
 					strcat(HeizungDataString,d);
 					
-					strcat(HeizungDataString,"&d2=");
+					strcat(HeizungDataString,"&d2="); // Vorlauf
 					itoa(inbuffer[2],d,16);
 					strcat(HeizungDataString,d);
 					
-					strcat(HeizungDataString,"&d3=");
+					strcat(HeizungDataString,"&d3="); // Ruecklauf
 					itoa(inbuffer[3],d,16);
 					strcat(HeizungDataString,d);
 					
@@ -2235,17 +2254,19 @@ int main(void)
 					strcat(HeizungDataString,d);
 					
 					
-					strcat(HeizungDataString,"&d5=");
+					strcat(HeizungDataString,"&d5="); // Status, bitweise
 					itoa(inbuffer[5],d,16);
 					strcat(HeizungDataString,d);
+               // Brennerstatus Bit 2
+					// Bit 4, 5 gefiltert aus Tagplanwert von Brenner und Mode
+               // Bit 6, 7 gefiltert aus Tagplanwert von Rinne
 					
-					
-					strcat(HeizungDataString,"&d6=");
+					strcat(HeizungDataString,"&d6="); // NO
 					itoa(inbuffer[6],d,16);
 					strcat(HeizungDataString,d);
 					
 					
-					strcat(HeizungDataString,"&d7=");
+					strcat(HeizungDataString,"&d7="); // innen
 					itoa(inbuffer[7],d,16);
 					strcat(HeizungDataString,d);
 					
@@ -2299,15 +2320,15 @@ int main(void)
 					strcat(AlarmDataString,d);
 					
 					strcat(AlarmDataString,"&d5=");
-					itoa(inbuffer[26],d,16);
+					itoa(inbuffer[26],d,16);      // EEPROM_Err;
 					strcat(AlarmDataString,d);
                
 					strcat(AlarmDataString,"&d6=");
-					itoa(inbuffer[25],d,16);
+					itoa(inbuffer[25],d,16);      // Write_Err
 					strcat(AlarmDataString,d);
                
 					strcat(AlarmDataString,"&d7=");
-					itoa(inbuffer[24],d,16);
+					itoa(inbuffer[24],d,16);      // Read_Err
 					strcat(AlarmDataString,d);
                
                // Zeit.minute, 6 bit
@@ -2354,7 +2375,6 @@ int main(void)
 					
 					// *** SPI senden
 					//StartTransfer(WebRxStartDaten++,1);
-					
 					
 				}
 					break;
@@ -2451,6 +2471,7 @@ int main(void)
 					
 				default:
 				{
+               
 					//			out_startdaten=DATATASK;
 					
 				}
@@ -2644,11 +2665,11 @@ int main(void)
                callbackstatus &= ~(1<< ALARMCALLBACK);
 				}
 				
-				if (sendWebCount == 8) // incrementieren
+				if (sendWebCount == 8) // Error
 				{
                
 					
-					sendWebCount++;
+					sendWebCount++;// incrementieren
 				}
 				
             // ++++++++++++++
@@ -3003,6 +3024,7 @@ int main(void)
                dat_p=http200ok(); // Header setzen
                dat_p=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<h1>200 OK</h1>"));
                dat_p = print_webpage_data(buf,(void*)SolarDataString); // pw=Pong&strom=1234
+               cronstatus |= (1<<CRON_SOLAR);
             }
             else if (cmd == 26)	// Data home lesen
             {
@@ -3010,6 +3032,7 @@ int main(void)
                dat_p=http200ok(); // Header setzen
                dat_p=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<h1>200 OK</h1>"));
                dat_p = print_webpage_data(buf,(void*)HeizungDataString); // pw=Pong&strom=1234
+               cronstatus |= (1<<CRON_HOME);
             }
             else if (cmd == 27)	// Data alarm lesen
             {
@@ -3017,6 +3040,7 @@ int main(void)
                dat_p=http200ok(); // Header setzen
                dat_p=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<h1>200 OK</h1>"));
                dat_p = print_webpage_data(buf,(void*)AlarmDataString); // pw=Pong&strom=1234
+               cronstatus |= (1<<CRON_ALARM);
             }
 
             // end cron_Stuff
