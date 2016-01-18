@@ -34,6 +34,15 @@
 #define SPI_CONTROL_CS_HC		PORTD3					// Ausgang CS fuer Slave
 
 // ************************************************
+// defines fuer cronstatus
+#define CRON_START   0
+#define CRON_END     1
+#define CRON_WAIT    2
+
+#define CRON_SOLAR   4
+#define CRON_HOME   5
+#define CRON_ALARM   6
+
 // ************************************************
 // defines fuer webspistatus
 
@@ -100,6 +109,8 @@ static volatile uint8_t			ByteCounter=0;				// aktuelle Bytenummer
 
 
 volatile uint8_t  webspistatus = 0;
+
+volatile uint8_t  cronstatus = 0; // regelung mit cronjobs
 
 
 volatile uint8_t pendenzstatus = 0;
