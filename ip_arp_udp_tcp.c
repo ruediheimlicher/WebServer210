@@ -840,7 +840,8 @@ void client_syn(uint8_t *buf,uint8_t srcport,uint8_t dstport_h,uint8_t dstport_l
 	buf[IP_TOTLEN_L_P]=44; // good for syn
 	buf[IP_PROTO_P]=IP_PROTO_TCP_V;
 	i=0;
-	while(i<4){
+	while(i<4)
+   {
 		buf[IP_DST_P+i]=wwwip[i];
 		buf[IP_SRC_P+i]=ipaddr[i];
 		i++;
@@ -1019,18 +1020,21 @@ uint16_t packetloop_icmp_tcp(uint8_t *buf,uint16_t plen)
 		make_echo_reply_from_request(buf,plen);
 		return(0);
 	}
-	if (plen<54 && buf[IP_PROTO_P]!=IP_PROTO_TCP_V ){
+	if (plen<54 && buf[IP_PROTO_P]!=IP_PROTO_TCP_V )
+   {
 		// smaller than the smallest TCP packet and not tcp port
 		return(0);
 	}
 #ifdef WWW_client
 	// a message for the tcp client, client_state is zero if client was never used
-	if ( buf[TCP_DST_PORT_H_P]==TCPCLIENT_SRC_PORT_H){
+	if ( buf[TCP_DST_PORT_H_P]==TCPCLIENT_SRC_PORT_H)
+   {
 		if (check_ip_message_is_from(buf,wwwip)==0)
 		{
 			return(0);
 		}
-		if ((buf[TCP_FLAGS_P] & TCP_FLAGS_SYN_V) && (buf[TCP_FLAGS_P] &TCP_FLAGS_ACK_V)){
+		if ((buf[TCP_FLAGS_P] & TCP_FLAGS_SYN_V) && (buf[TCP_FLAGS_P] &TCP_FLAGS_ACK_V))
+      {
 			// synack, answer with ack
 			make_tcp_ack_from_any(buf,0,0);
 			// Make a tcp/www get/post. When calling this function we must

@@ -52,6 +52,7 @@ static char baseurl[]="http://ruediheimlicherhome.dyndns.org/";
 
 
 
+
 volatile uint16_t					timer2_counter=0;
 
 //enum webtaskflag{IDLE, TWISTATUS,EEPROMREAD, EEPROMWRITE};
@@ -177,6 +178,7 @@ static uint8_t mymac[6] = {0x52,0x48,0x34,0x37,0x30,0x32};
 static uint8_t myip[4] = {192,168,1,210};
 static uint8_t mytestip[4] = {192,168,1,213};
 
+
 // IP address of the web server to contact (IP of the first portion of the URL):
 //static uint8_t websrvip[4] = {77,37,2,152};
 
@@ -185,7 +187,16 @@ static uint8_t mytestip[4] = {192,168,1,213};
 // static uint8_t websrvip[4] = {193,17,85,42}; // ruediheimlicher 193.17.85.42 nine
 //static uint8_t websrvip[4] = {213,188,35,156}; //   30.7.2014 msh
 //static uint8_t websrvip[4] = {64,37,49,112}; //     64.37.49.112   28.02.2015 hostswiss // Pfade in .pl angepasst: cgi-bin neu in root dir
-static uint8_t websrvip[4] = {217,26,52,16};//        217.26.52.16  24.03.2015 hostpoint
+
+// **************************************************
+// **************************************************
+// Anpassen bei Aenderung:
+
+//static uint8_t websrvip[4] = {217,26,52,16};//        217.26.52.16  24.03.2015 hostpoint
+static uint8_t websrvip[4] = {217,26,53,231};//        217.26.52.16  18.07.2016 hostpoint
+
+// **************************************************
+// **************************************************
 
 static uint8_t localwebsrvip[4] = {127,0,0,1};//        localhost
 
@@ -195,6 +206,7 @@ static uint8_t localwebsrvip[4] = {127,0,0,1};//        localhost
 
 #define WEBSERVER_VHOST "www.ruediheimlicher.ch"
 
+#define LOCAL_CURRENT_HOST 192.168.1.215
 
 // Default gateway. The ip address of your DSL router. It can be set to the same as
 // websrvip the case where there is no default GW to access the
@@ -279,7 +291,6 @@ void str_cat(char *ziel,char *quelle)
 char *trimwhitespace(char *str)
 {
    char *end;
-   
    // Trim leading space
    while(isspace(*str)) str++;
    
@@ -435,6 +446,9 @@ void solar_browserresult_callback(uint8_t statuscode,uint16_t datapos)
       lcd_gotoxy(0,0);
       lcd_puts("s cbOK\0");
       
+      lcd_gotoxy(6,0);
+      lcd_puts("  ");   // statuscode entfernen
+      
       web_client_sendok++;
       callbackstatus |= (1<< SOLARCALLBACK); // OK
       //				sei();
@@ -447,7 +461,7 @@ void solar_browserresult_callback(uint8_t statuscode,uint16_t datapos)
       lcd_gotoxy(0,0);
       lcd_puts("s cber\0");
       lcd_puthex(statuscode);
-      callbackstatus &= ~(1<< SOLARCALLBACK);
+      callbackstatus &= ~(1<< SOLARCALLBACK); // error
    }
 }
 
@@ -456,7 +470,6 @@ void home_browserresult_callback(uint8_t statuscode,uint16_t datapos)
    // datapos is not used in this example
    if (statuscode==0)
    {
-      
       lcd_gotoxy(0,0);
       lcd_puts("      \0");
       lcd_gotoxy(0,0);
@@ -481,7 +494,6 @@ void home_browserresult_callback(uint8_t statuscode,uint16_t datapos)
 }
 
 
-
 void alarm_browserresult_callback(uint8_t statuscode,uint16_t datapos)
 {
    // datapos is not used in this example
@@ -495,8 +507,7 @@ void alarm_browserresult_callback(uint8_t statuscode,uint16_t datapos)
       
       web_client_sendok++;
       callbackstatus |= (1<< ALARMCALLBACK); // OK
-
-      //				sei();
+      //	sei();
       
    }
    else
@@ -1127,9 +1138,6 @@ uint16_t print_webpage_ok(uint8_t *buf,uint8_t *okcode)
 }
 
 
-
-
-
 uint16_t print_webpage_confirm(uint8_t *buf)
 {
 	uint16_t plen;
@@ -1608,40 +1616,14 @@ int main(void)
       myip[3] = 213;
 
    }
-   
-
-   
-   
-	//SLAVE
+ 
+   //SLAVE
 	//uint16_t Tastenprellen=0x0fff;
 	uint16_t loopcount0=0;
 	uint16_t loopcount1=0;
 	//	Zaehler fuer Wartezeit nach dem Start
 	//uint16_t startdelay0=0x001F;
 	//uint16_t startdelay1=0;
-	
-	//Zaehler fuer Zeit von (SDA || SCL = LO)
-	//uint16_t twi_LO_count0=0;
-	//uint16_t twi_LO_count1=0;
-	
-	//Zaehler fuer Zeit von (SDA && SCL = HI)
-	//uint16_t twi_HI_count0=0;
-   
-	/*
-	 eepromWDT_Count0: Zaehler der wdt-Resets mit restart.
-	 
-	 Neu:
-	 Wenn ein wdt-Reset abläuft, wird Bit 7 in eepromWDT_Count0 gesetzt.
-	 Dadurch wartet der Prozessor mit dem Initialisieren des TWI-Slave, bis eine neue Startbedingung erscheint.
-	 Anschliessend wird das Bit 7 wieder zurückgesetzt.
-	 
-	 alt:
-	 eepromWDT_Count1: Zaehler fuer neuen wdt-Reset. Wenn wdt anspricht, wird der Zaheler erhoeht.
-	 Beim Restart wird bei anhaltendem LO auf SDA oder SCL gewartet.
-	 Wenn SCL und SDA beide HI sind, wird der Zaehler auf den Wert von eepromWDT_Count0 gesetzt
-	 und der TWI-Slave gestartet.
-	 
-	 */
 	//uint8_t StartStatus=0x00; //	Status des Slave
    // ETH
 	//uint16_t plen;
@@ -2573,7 +2555,6 @@ int main(void)
 					//strcat(urlvarstr,"data=
 		//			client_browse_url((char*)PSTR("/cgi-bin/solar.pl?pw="),urlvarstr,PSTR(WEBSERVER_VHOST),&ping_callback);
 					//client_browse_url(PSTR("/blatt/cgi-bin/home.pl?"),urlvarstr,PSTR(WEBSERVER_VHOST),&browserresult_callback);
-					
 				}
 				
 				// reset after a delay to prevent permanent bouncing
@@ -2817,7 +2798,6 @@ int main(void)
 					//EventCounter=0x18FF; // Timer fuer SPI vorwaertsstellen 1Aff> 0.7s
 					//	webspistatus |= (1<<SPI_REQUEST_BIT);
 					
-					
 				}
 #pragma mark cmd 6
 				else if (cmd == 6) //   Bestaetigung fuer readEEPROM-Request an HomeServer senden, mit lb, hb
@@ -3047,7 +3027,7 @@ int main(void)
 				
 				else
 				{
-					dat_p=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 401 Unauthorized\r\nContent-Type: text/html\r\n\r\n<h1>401  * Zugriff verweigert *</h1>"));
+					dat_p=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 401 Unauthorized\r\nContent-Type: text/html\r\n\r\n<h1>401  * Zugriff heute verweigert *</h1>"));
 				}
             
             

@@ -24,7 +24,6 @@
 #include <avr/delay.h>
 #endif
 
-
 static uint8_t Enc28j60Bank;
 static int16_t gNextPacketPtr;
 #define ENC28J60_CONTROL_PORT   PORTB
