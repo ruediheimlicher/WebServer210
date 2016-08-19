@@ -971,9 +971,9 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
 						dataOK ++;
 						char* buffer= malloc(32);
 						//lcd_putc('C');
-						
+  						
 						strcpy(buffer, actionbuf);
-						
+					
 						//lcd_putc('D');
 						
 						uint8_t index=0;
