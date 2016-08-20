@@ -947,6 +947,52 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
 					
 					if (find_key_val(str,actionbuf,28,"data"))		// Datenstring mit '+' - Trennzeichen
 					{
+                  webtaskflag = EEPROMWRITETASK;					// Task setzen
+                  out_startdaten=EEPROMWRITETASK; // B7
+                  dataOK ++;
+                  
+                  uint8_t datacode = atoi(actionbuf);
+                  if (datacode == 1)
+                  {
+                     if (find_key_val(str,actionbuf,10,"d0"))		// byte von data
+                     {
+                        outbuffer[0]=atoi(actionbuf);
+                     }
+                     if (find_key_val(str,actionbuf,10,"d1"))		// byte von data
+                     {
+                        outbuffer[1]=atoi(actionbuf);
+                     }
+                     if (find_key_val(str,actionbuf,10,"d2"))		// byte von data
+                     {
+                        outbuffer[2]=atoi(actionbuf);
+                     }
+                     if (find_key_val(str,actionbuf,10,"d3"))		// byte von data
+                     {
+                        outbuffer[3]=atoi(actionbuf);
+                     }
+                     if (find_key_val(str,actionbuf,10,"d4"))		// byte von data
+                     {
+                        outbuffer[4]=atoi(actionbuf);
+                     }
+                     if (find_key_val(str,actionbuf,10,"d5"))		// byte von data
+                     {
+                        outbuffer[5]=atoi(actionbuf);
+                     }
+                     if (find_key_val(str,actionbuf,10,"d6"))		// byte von data
+                     {
+                        outbuffer[6]=atoi(actionbuf);
+                     }
+                     if (find_key_val(str,actionbuf,10,"d7"))		// byte von data
+                     {
+                        outbuffer[7]=atoi(actionbuf);
+                     }
+                     
+                     return (109);
+                  }
+                  
+                  
+                  
+                  
 						//lcd_gotoxy(0,0);
 						//lcd_puthex(strlen(actionbuf));
 						//lcd_putc(' ');
@@ -955,10 +1001,10 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
 						//lcd_gotoxy(14,1);
 						//lcd_putc('A');
 						
-						webtaskflag = EEPROMWRITETASK;					// Task setzen
+						
 						//EEPROMTxStartDaten=webtaskflag;
 						
-						out_startdaten=EEPROMWRITETASK; // B7
+						
 						
 						// Test
 						/*
@@ -968,7 +1014,7 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
                    */
 						//lcd_putc('B');
 						
-						dataOK ++;
+						/*
 						char* buffer= malloc(32);
 						//lcd_putc('C');
   						
@@ -989,7 +1035,9 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
 						}
 						free(linePtr);
 						free(buffer);
-					} // if data
+					*/
+               
+               } // if data
 					
                //				if (dataOK==2) // alle Daten da
 					{
@@ -2857,7 +2905,7 @@ int main(void)
 					 //		lcd_puthex(outbuffer[2]);
 					 //		lcd_puthex(outbuffer[3]);
 					 */
-					uint8_t j=0;
+					//uint8_t j=0;
 					//for (j=0;j<12;j++)
 					{
 						//	lcd_putc(EEPROM_String[j]);
@@ -3022,6 +3070,14 @@ int main(void)
                dat_p = print_webpage_data(buf,(void*)AlarmDataString); // pw=Pong&strom=1234
                cronstatus |= (1<<CRON_ALARM);
             }
+            
+             else if (cmd == 109)	// revision data
+             {
+                dat_p = print_webpage_ok(buf,(void*)"dataxy");
+             
+             
+             }
+            
 
             // end cron_Stuff
 				
