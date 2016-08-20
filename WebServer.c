@@ -925,7 +925,7 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
 					uint8_t dataOK=0;
 					webtaskflag = EEPROMRECEIVETASK; // B6
                
-					//out_startdaten=EEPROMRECEIVETASK;
+					out_startdaten=EEPROMRECEIVETASK;
 					
 					aktuelleDatenbreite = buffer_size;
 					
@@ -945,46 +945,72 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
 						out_lbdaten=atoi(actionbuf);
 					}
 					
-					if (find_key_val(str,actionbuf,28,"data"))		// Datenstring mit '+' - Trennzeichen
+					if (find_key_val(str,actionbuf,28,"data"))		// Datenstring mit
 					{
+                  
                   webtaskflag = EEPROMWRITETASK;					// Task setzen
                   out_startdaten=EEPROMWRITETASK; // B7
                   dataOK ++;
                   
                   uint8_t datacode = atoi(actionbuf);
+                  
                   if (datacode == 1)
                   {
+  #pragma mark Data
                      if (find_key_val(str,actionbuf,10,"d0"))		// byte von data
                      {
-                        outbuffer[0]=atoi(actionbuf);
+                        //lcd_gotoxy(10,0);
+                        //lcd_putc('d');
+                        //lcd_puts(actionbuf);
+                        outbuffer[0]=strtol(actionbuf,NULL,16);
+                        //lcd_putc('*');
+                        //lcd_puthex(outbuffer[0]);
+                        //lcd_putc('*');
+                     }
+                     else
+                     {
+                        outbuffer[0]=0x01;
+
                      }
                      if (find_key_val(str,actionbuf,10,"d1"))		// byte von data
                      {
-                        outbuffer[1]=atoi(actionbuf);
+                        outbuffer[1]=strtol(actionbuf,NULL,16);
                      }
+                     else
+                     {
+                        outbuffer[0]=0x02;
+                        
+                     }
+
                      if (find_key_val(str,actionbuf,10,"d2"))		// byte von data
                      {
-                        outbuffer[2]=atoi(actionbuf);
+                        outbuffer[2]=strtol(actionbuf,NULL,16);
                      }
+                     else
+                     {
+                        outbuffer[0]=0x03;
+                        
+                     }
+
                      if (find_key_val(str,actionbuf,10,"d3"))		// byte von data
                      {
-                        outbuffer[3]=atoi(actionbuf);
+                        outbuffer[3]=strtol(actionbuf,NULL,16);
                      }
                      if (find_key_val(str,actionbuf,10,"d4"))		// byte von data
                      {
-                        outbuffer[4]=atoi(actionbuf);
+                        outbuffer[4]=strtol(actionbuf,NULL,16);
                      }
                      if (find_key_val(str,actionbuf,10,"d5"))		// byte von data
                      {
-                        outbuffer[5]=atoi(actionbuf);
+                        outbuffer[5]=strtol(actionbuf,NULL,16);
                      }
                      if (find_key_val(str,actionbuf,10,"d6"))		// byte von data
                      {
-                        outbuffer[6]=atoi(actionbuf);
+                        outbuffer[6]=strtol(actionbuf,NULL,16);
                      }
                      if (find_key_val(str,actionbuf,10,"d7"))		// byte von data
                      {
-                        outbuffer[7]=atoi(actionbuf);
+                        outbuffer[7]=strtol(actionbuf,NULL,16);
                      }
                      
                      return (9);
@@ -1058,7 +1084,7 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
 					lcd_putc('*');
 					return (10);
 				}
-   #pragma mark Data    
+   
             
             // Auslesen der Daten
             if (find_key_val(str,actionbuf,10,"data")) // HomeCentral reseten
@@ -1434,7 +1460,7 @@ uint16_t print_webpage_status(uint8_t *buf)
 uint16_t print_webpage_data(uint8_t *buf,uint8_t *data)
 {
    // Schickt die Daten an den cronjob
-   uint16_t plen=http200ok;
+   uint16_t plen=(uint16_t)http200ok;
    //plen=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nPragma: no-cache\r\n\r\n"));
    plen=fill_tcp_data(buf,plen,(void*)data);
    
@@ -1444,7 +1470,7 @@ uint16_t print_webpage_data(uint8_t *buf,uint8_t *data)
 uint16_t print_webpage_wait(uint8_t *buf,uint8_t *data) // Wait auf Ende Webinterface-Event
 {
    // Schickt wait an den cronjob
-   uint16_t plen=http200ok;
+   uint16_t plen=(uint16_t)http200ok;
    //plen=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nPragma: no-cache\r\n\r\n"));
    plen=fill_tcp_data(buf,plen,(void*)"wait");
    
@@ -2227,10 +2253,10 @@ int main(void)
 					itoa(inbuffer[16],d,16);
 					strcat(SolarDataString,d);
 
-               lcd_gotoxy(0,3);
+ //              lcd_gotoxy(0,3);
                //lcd_puts("s \0");
-               lcd_puthex(inbuffer[15]);
-               lcd_puthex(inbuffer[16]);
+//               lcd_puthex(inbuffer[15]);
+ //              lcd_puthex(inbuffer[16]);
 
                //uint8_t l= strlen(SolarDataString);
                
