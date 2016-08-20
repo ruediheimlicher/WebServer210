@@ -987,7 +987,7 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
                         outbuffer[7]=atoi(actionbuf);
                      }
                      
-                     return (109);
+                     return (9);
                   }
                   
                   
@@ -1042,7 +1042,7 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
                //				if (dataOK==2) // alle Daten da
 					{
 						
-						return (9);												// Empfang bestätigen
+				//		return (9);												// Empfang bestätigen
 					}
 				} // wadr
 				
@@ -1080,7 +1080,7 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
 
             
 	#pragma mark task
-            if (find_key_val(str,actionbuf,12,"task")) // HomeCentral reseten
+            if (find_key_val(str,actionbuf,12,"task")) // TODO HomeCentral reseten
             {
                //lcd_gotoxy(10,0);
                //lcd_putc('X');
@@ -1094,6 +1094,7 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
                   //lcd_gotoxy(0,0);
                   //lcd_putc('T');
                   return 11;
+                  /*
                   char* buffer= malloc(32);
                   
                   strcpy(buffer, actionbuf);
@@ -1113,6 +1114,7 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
                   free(linePtr);
                   free(buffer);
                   return 11;
+                   */
                }
                else
                {
