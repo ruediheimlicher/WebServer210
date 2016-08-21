@@ -967,31 +967,15 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
                         //lcd_puthex(outbuffer[0]);
                         //lcd_putc('*');
                      }
-                     else
-                     {
-                        outbuffer[0]=0x01;
-
-                     }
                      if (find_key_val(str,actionbuf,10,"d1"))		// byte von data
                      {
                         outbuffer[1]=strtol(actionbuf,NULL,16);
                      }
-                     else
-                     {
-                        outbuffer[0]=0x02;
-                        
-                     }
-
                      if (find_key_val(str,actionbuf,10,"d2"))		// byte von data
                      {
                         outbuffer[2]=strtol(actionbuf,NULL,16);
                      }
-                     else
-                     {
-                        outbuffer[0]=0x03;
-                        
-                     }
-
+ 
                      if (find_key_val(str,actionbuf,10,"d3"))		// byte von data
                      {
                         outbuffer[3]=strtol(actionbuf,NULL,16);
