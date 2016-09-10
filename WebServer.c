@@ -47,7 +47,7 @@
 
 volatile uint8_t rxdata =0;
 volatile uint16_t EventCounter=0;
-static char baseurl[]="http://ruediheimlicherhome.dyndns.org/";
+//static char baseurl[]="http://ruediheimlicherhome.dyndns.org/";
 
 
 
@@ -60,7 +60,7 @@ volatile uint16_t					timer2_counter=0;
 static uint8_t  webtaskflag =0;
 //uint8_t  webspistatus =0;
 
-static uint8_t monitoredhost[4] = {10,0,0,7};
+//static uint8_t monitoredhost[4] = {10,0,0,7};
 
 //#define STR_BUFFER_SIZE 24
 //static char strbuf_A[STR_BUFFER_SIZE+1];
@@ -77,8 +77,8 @@ static volatile uint8_t Temperatur;
 //volatile uint8_t txbuffer[twi_buffer_size];
 volatile uint8_t txstartbuffer;
 
-static char HeizungDataString[64];
-static char SolarDataString[64];
+static char HeizungDataString[96];
+static char SolarDataString[96];
 static char EEPROM_String[96];
 
 //static  char d[4]={};
@@ -87,7 +87,7 @@ static char EEPROM_String[96];
 
 //char HeizungVarString[64];
 
-static char AlarmDataString[64];
+static char AlarmDataString[96];
 
 //static char ErrDataString[32];
 
@@ -546,9 +546,9 @@ void strom_browserresult_callback(uint8_t statuscode,uint16_t datapos)
    {
       
       lcd_gotoxy(12,3);
-      lcd_puts("           \0");
+      lcd_puts("      \0");
       lcd_gotoxy(12,3);
-      lcd_puts("s cb OK \0");
+      lcd_puts("s cbOK\0");
       
       // lcd_gotoxy(19,0);
       // lcd_putc(' ');
@@ -574,9 +574,9 @@ void strom_browserresult_callback(uint8_t statuscode,uint16_t datapos)
    {
       
       lcd_gotoxy(0,3);
-      lcd_puts("           \0");
+      lcd_puts("      \0");
       lcd_gotoxy(0,3);
-      lcd_puts("s cb err \0");
+      lcd_puts("s cber\0");
       lcd_puthex(statuscode);
       
       lcd_gotoxy(19,0);
@@ -2516,16 +2516,16 @@ int main(void)
                // stromstring bilden
                //char key1[]="pw=\0";
                //char sstr[]="Pong\0";
-               /*
+               
                 strcpy(CurrentDataString,"pw=");
                 strcat(CurrentDataString,"Pong");
                 // Strom
                 // Status WS
-              
+               
                 strcat(CurrentDataString,"&status=");
                 itoa(inbuffer[18],d,16);
                 strcat(CurrentDataString,d);
-                
+                /*
                  // Strom HH
                strcat(CurrentDataString,"&stromhh=");
                 itoa(inbuffer[33],d,16);
