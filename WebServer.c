@@ -102,12 +102,19 @@ volatile uint8_t callbackstatus = 0;
 
 volatile uint8_t stunde = 1; // Stunde, Bit 0-4
 volatile uint8_t minute = 1; // Minute, Bit 0-5
+
+volatile uint8_t laststunde = 0; // Stunde, Bit 0-4
+volatile uint8_t lastminute = 0; // Minute, Bit 0-5
+
 volatile uint8_t tagdesmonats = 1 ; // datum tag
+volatile uint8_t lasttagdesmonats = 0;
+
 volatile uint8_t monat = 1; // datum monat: 1-3 jahr ab 2010: 4-7
 volatile uint8_t jahr = 1; // datum monat: 1-3 jahr ab 2010: 4-7
 
 volatile uint16_t weblencounter=0;
 
+volatile uint8_t sendintervall=0;
 
 
 
@@ -2053,7 +2060,10 @@ int main(void)
 		{
 			//start_web_client=1;
 			sendWebCount=0;
+         sendWebCount &= ~(1<<DATASEND); // Senden beendet
 		}
+      
+      
 		
 		//		sendWebCount=0;
 		
@@ -2166,8 +2176,18 @@ int main(void)
                stunde = (inbuffer[46] ); // Stunde, Bit 0-4
                minute = (inbuffer[47] ); // Minute, Bit 0-5
                
-               tagdesmonats = inbuffer[40] ; // datum tag
                
+               tagdesmonats = inbuffer[40] ; // datum tag
+
+#pragma mark DATASEND
+               if (((minute - lastminute) > SENDABSTAND) || (stunde != laststunde) || (lasttagdesmonats != tagdesmonats)) // genug Abstand oder andere Stunde oder anderer Tag
+               {
+                  lastminute = minute;
+                  laststunde = stunde;
+                  lasttagdesmonats = tagdesmonats;
+                  sendstatus |= (1<<DATASEND); // Daten senden
+               }
+
                monat = (inbuffer[41] & 0x0F ); // datum monat: 1-3 jahr ab 2010: 4-7
                jahr = ((inbuffer[41] & 0xF0 )>>4) + 10; // datum monat: 1-3 jahr ab 2010: 4-7
                //lcd_gotoxy(7,0);
@@ -2256,6 +2276,7 @@ int main(void)
                 outbuffer[0] |= (Zeit.stunde & 0x1F);			//	Bit 0-4: Stunde, 5 bit
                 outbuffer[1] = (0x01 << 6);						// Bits 6,7: Art=1
                 outbuffer[1] |= Zeit.minute & 0x3F;				// Bits 0-5: Minute, 6 bit
+                
                 outbuffer[2] = HeizungRXdaten[0];				//	Vorlauf
                 
                 outbuffer[3] = HeizungRXdaten[1];				//	Rücklauf
@@ -2390,6 +2411,28 @@ int main(void)
 					strcat(AlarmDataString,"&d10=");
 					itoa(SPI_ErrCounter,d,16);
 					strcat(AlarmDataString,d);
+               
+               // Strom
+               // Status WS
+               strcat(AlarmDataString,"&d11=");
+               itoa(inbuffer[18],d,16);
+               strcat(AlarmDataString,d);
+
+               // Strom HH
+               strcat(AlarmDataString,"&d12=");
+               itoa(inbuffer[33],d,16);
+               strcat(AlarmDataString,d);
+
+               // Strom H
+               strcat(AlarmDataString,"&d13=");
+               itoa(inbuffer[34],d,16);
+               strcat(AlarmDataString,d);
+
+               // Strom L
+               strcat(AlarmDataString,"&d14=");
+               itoa(inbuffer[35],d,16);
+               strcat(AlarmDataString,d);
+
 					
                
                // End Alarm
@@ -2581,6 +2624,7 @@ int main(void)
 			
 			if(dat_p==0) // Kein Aufruf, eigene Daten senden an Homeserver
 			{
+            // beginn dat_p==0
 				//lcd_gotoxy(0,1);
 				//lcd_puts("TCP\0");
 				//lcd_puthex(start_web_client);
@@ -2622,97 +2666,102 @@ int main(void)
 				{
 					start_web_client=0;
 				}
-            
+
 #pragma mark SolarDaten an HomeServer schicken
-				if (sendWebCount == 1) // Solar-Daten an HomeServer -> solar schicken
-				{
-					
-					start_web_client=2;
-					web_client_attempts++;
-					
-					//strcat(SolarVarString,SolarDataString);
-					start_web_client=0;
-					
-					
-               //lcd_gotoxy(11,0);
-               //lcd_putc('s');
 
-					// Daten an Solar schicken
-					client_browse_url((char*)PSTR("/cgi-bin/solar.pl?"),SolarDataString,(char*)PSTR(WEBSERVER_VHOST),&solar_browserresult_callback);
-					
-					
-					sendWebCount++;
-               callbackstatus &= ~(1<< SOLARCALLBACK); // bit zuruecksetzen
-
-				}
-            
-            // +++++++++++++++
-#pragma mark HeizungDaten an HomeServer schicken
-				if (sendWebCount == 3) // Home-Daten an HomeServer -> home schicken
-				{
-					
-					start_web_client=5;
-					web_client_attempts++;
-					
-					
-					start_web_client=0;
-					
-               //lcd_gotoxy(11,0);
-               //lcd_putc('h');
-				
-					// Daten an Home schicken
-					client_browse_url((char*)PSTR("/cgi-bin/home.pl?"),HeizungDataString,(char*)PSTR(WEBSERVER_VHOST),&home_browserresult_callback);
+            if (sendstatus & (1<<DATASEND)) // Senden an HomeServer
+            {
                
-               
-               //client_browse_url("/cgi-bin/home.pl?",HeizungDataString,WEBSERVER_VHOST,&home_browserresult_callback);
-
-					//lcd_puts("cgi l:\0");
-					//lcd_putint2(strlen(SolarDataString));
-					
-					sendWebCount++;
-               callbackstatus &= ~(1<< HOMECALLBACK); // Bit zuruecksetzewn
-				}
-				
-#pragma mark AlarmDaten an HomeServer schicken
-				if (sendWebCount == 6) // Alarm-Daten an HomeServer ->Alarm schicken
-				{
-					
-					start_web_client=7;
-					web_client_attempts++;
-					
-					start_web_client=0;
-					
-               //lcd_gotoxy(11,0);
-               //lcd_putc('a');
-
-					// Daten an Alarm schicken
-					client_browse_url((char*)PSTR("/cgi-bin/alarm.pl?"),AlarmDataString,(char*)PSTR(WEBSERVER_VHOST),&alarm_browserresult_callback);
-               
-               if (pendenzstatus & (1<<RESETREPORT))
+               if (sendWebCount == 1) // Solar-Daten an HomeServer -> solar schicken
                {
-                  pendenzstatus &= ~(1<<RESETREPORT);
-                  lcd_gotoxy(18,3);
-                  lcd_putc(' ');
-                  lcd_putc(' ');
+                  
+                  start_web_client=2;
+                  web_client_attempts++;
+                  
+                  //strcat(SolarVarString,SolarDataString);
+                  start_web_client=0;
+                  
+                  
+                  //lcd_gotoxy(11,0);
+                  //lcd_putc('s');
+                  
+                  // Daten an Solar schicken
+                  client_browse_url((char*)PSTR("/cgi-bin/solar.pl?"),SolarDataString,(char*)PSTR(WEBSERVER_VHOST),&solar_browserresult_callback);
+                  
+                  
+                  sendWebCount++;
+                  callbackstatus &= ~(1<< SOLARCALLBACK); // bit zuruecksetzen
+                  
                }
-
                
-               //client_browse_url("/cgi-bin/alarm.pl?",AlarmDataString,WEBSERVER_VHOST,&alarm_browserresult_callback);
-
-					//lcd_puts("cgi l:\0");
-					//lcd_putint2(strlen(SolarDataString));
-					
-					sendWebCount++;
-               callbackstatus &= ~(1<< ALARMCALLBACK);
-				}
-				
-				if (sendWebCount == 8) // Error
-				{
+               // +++++++++++++++
+#pragma mark HeizungDaten an HomeServer schicken
+               if (sendWebCount == 3) // Home-Daten an HomeServer -> home schicken
+               {
+                  
+                  start_web_client=5;
+                  web_client_attempts++;
+                  
+                  
+                  start_web_client=0;
+                  
+                  //lcd_gotoxy(11,0);
+                  //lcd_putc('h');
+                  
+                  // Daten an Home schicken
+                  client_browse_url((char*)PSTR("/cgi-bin/home.pl?"),HeizungDataString,(char*)PSTR(WEBSERVER_VHOST),&home_browserresult_callback);
+                  
+                  
+                  //client_browse_url("/cgi-bin/home.pl?",HeizungDataString,WEBSERVER_VHOST,&home_browserresult_callback);
+                  
+                  //lcd_puts("cgi l:\0");
+                  //lcd_putint2(strlen(SolarDataString));
+                  
+                  sendWebCount++;
+                  callbackstatus &= ~(1<< HOMECALLBACK); // Bit zuruecksetzewn
+               }
                
-					
-					sendWebCount++;// incrementieren
-				}
-				
+#pragma mark AlarmDaten an HomeServer schicken
+               if (sendWebCount == 6) // Alarm-Daten an HomeServer ->Alarm schicken
+               {
+                  
+                  start_web_client=7;
+                  web_client_attempts++;
+                  
+                  start_web_client=0;
+                  
+                  //lcd_gotoxy(11,0);
+                  //lcd_putc('a');
+                  
+                  // Daten an Alarm schicken
+                  client_browse_url((char*)PSTR("/cgi-bin/alarm.pl?"),AlarmDataString,(char*)PSTR(WEBSERVER_VHOST),&alarm_browserresult_callback);
+                  
+                  if (pendenzstatus & (1<<RESETREPORT))
+                  {
+                     pendenzstatus &= ~(1<<RESETREPORT);
+                     lcd_gotoxy(18,3);
+                     lcd_putc(' ');
+                     lcd_putc(' ');
+                  }
+                  
+                  
+                  //client_browse_url("/cgi-bin/alarm.pl?",AlarmDataString,WEBSERVER_VHOST,&alarm_browserresult_callback);
+                  
+                  //lcd_puts("cgi l:\0");
+                  //lcd_putint2(strlen(SolarDataString));
+                  
+                  sendWebCount++;
+                  callbackstatus &= ~(1<< ALARMCALLBACK);
+               }
+               
+               if (sendWebCount == 8) // Error
+               {
+                  
+                  
+                  sendWebCount++;// incrementieren
+               }
+            } // if DATASEND
+            
             // ++++++++++++++
 				continue;
 				
