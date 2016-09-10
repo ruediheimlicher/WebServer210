@@ -115,6 +115,10 @@ volatile uint8_t  cronstatus = 0; // regelung mit cronjobs
 
 volatile uint8_t pendenzstatus = 0;
 
+volatile uint8_t  sendstatus = 0; // Daten an Webhost senden
+
+#define DATASEND 1
+
 
 uint8_t SPI_shift_out_byte(uint8_t out_byte);
 
