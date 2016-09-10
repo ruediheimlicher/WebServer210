@@ -89,7 +89,18 @@ static char EEPROM_String[96];
 
 static char AlarmDataString[64];
 
-static char ErrDataString[32];
+//static char ErrDataString[32];
+
+
+static char                CurrentDataString[64];
+ /*
+volatile uint16_t          wattstunden=0;
+volatile uint16_t                   kilowattstunden=0;
+volatile uint32_t                   webleistung=0;
+//static char stromstring[10];
+
+volatile float leistung =1;
+*/
 
 
 volatile uint8_t oldErrCounter=0;
@@ -525,6 +536,53 @@ void alarm_browserresult_callback(uint8_t statuscode,uint16_t datapos)
       lcd_puts("a cber\0");
       lcd_puthex(statuscode);
       callbackstatus &= ~(1<< ALARMCALLBACK); // Err
+   }
+}
+
+void strom_browserresult_callback(uint8_t statuscode,uint16_t datapos)
+{
+   // datapos is not used in this example
+   if (statuscode==0)
+   {
+      
+      lcd_gotoxy(12,3);
+      lcd_puts("           \0");
+      lcd_gotoxy(12,3);
+      lcd_puts("s cb OK \0");
+      
+      // lcd_gotoxy(19,0);
+      // lcd_putc(' ');
+      lcd_gotoxy(19,0);
+      lcd_putc('+');
+      
+      /*
+      webstatus &= ~(1<<DATASEND); // Datasend auftrag ok
+      
+      webstatus &= ~(1<<DATAPEND); // Quittung fuer callback-erhalt
+      
+      // Messungen wieder starten
+      
+      webstatus &= ~(1<<CURRENTSTOP); // Messung wieder starten
+      webstatus |= (1<<CURRENTWAIT); // Beim naechsten Impuls Messungen wieder starten
+      sei();
+      
+      web_client_sendok++;
+      */
+      
+   }
+   else
+   {
+      
+      lcd_gotoxy(0,3);
+      lcd_puts("           \0");
+      lcd_gotoxy(0,3);
+      lcd_puts("s cb err \0");
+      lcd_puthex(statuscode);
+      
+      lcd_gotoxy(19,0);
+      lcd_putc(' ');
+      lcd_gotoxy(19,0);
+      lcd_putc('-');
    }
 }
 
@@ -2411,7 +2469,7 @@ int main(void)
 					strcat(AlarmDataString,"&d10=");
 					itoa(SPI_ErrCounter,d,16);
 					strcat(AlarmDataString,d);
-               
+               /*
                // Strom
                // Status WS
                strcat(AlarmDataString,"&d11=");
@@ -2432,11 +2490,78 @@ int main(void)
                strcat(AlarmDataString,"&d14=");
                itoa(inbuffer[35],d,16);
                strcat(AlarmDataString,d);
-
+*/
 					
                
                // End Alarm
- 					
+               
+#pragma mark CurrentDataString
+               
+               lcd_gotoxy(0,3);
+               //lcd_putc('t');
+               //lcd_putint(wstemperatur);
+               //lcd_putc(' ');
+               
+               //lcd_putc('s');
+               lcd_putint(inbuffer[18]);
+               lcd_putc('*');
+               lcd_putint(inbuffer[33]);
+               lcd_putc(' ');
+               lcd_putint(inbuffer[34]);
+               lcd_putc(' ');
+               lcd_putint(inbuffer[35]);
+
+               
+               CurrentDataString[0]='\0';
+               // stromstring bilden
+               //char key1[]="pw=\0";
+               //char sstr[]="Pong\0";
+               /*
+                strcpy(CurrentDataString,"pw=");
+                strcat(CurrentDataString,"Pong");
+                // Strom
+                // Status WS
+              
+                strcat(CurrentDataString,"&status=");
+                itoa(inbuffer[18],d,16);
+                strcat(CurrentDataString,d);
+                
+                 // Strom HH
+               strcat(CurrentDataString,"&stromhh=");
+                itoa(inbuffer[33],d,16);
+                strcat(CurrentDataString,d);
+                
+                // Strom H
+                strcat(CurrentDataString,"&stromh=");
+                itoa(inbuffer[34],d,16);
+                strcat(CurrentDataString,d);
+                
+                // Strom L
+                strcat(CurrentDataString,"&stroml=");
+                itoa(inbuffer[35],d,16);
+                strcat(CurrentDataString,d);
+                
+               char webstromstring[16]={};
+               
+               leistung=0;
+               uint32_t impulsmittelwert = inbuffer[33] + 0xFF*inbuffer[34] + 0xFFFF*inbuffer[35];
+               if (impulsmittelwert)
+               {
+                  leistung = 360.0/impulsmittelwert*100000.0;// 480us
+               }
+                
+                  // webleistung = (uint32_t)360.0/impulsmittelwert*1000000.0;
+                  webleistung = (uint32_t)360.0/impulsmittelwert*100000.0;
+                  dtostrf(webleistung,10,0,stromstring); // 800us
+                  strcpy(webstromstring,stromstring);
+                  
+
+               
+               char* tempstromstring = (char*)trimwhitespace(webstromstring);
+               strcat(CurrentDataString,tempstromstring);
+               // CurrentDataString end
+               */
+               
 					//in_startdaten=0;
 					
 					//lcd_clr_line(0);
@@ -2722,7 +2847,7 @@ int main(void)
                }
                
 #pragma mark AlarmDaten an HomeServer schicken
-               if (sendWebCount == 6) // Alarm-Daten an HomeServer ->Alarm schicken
+               if (sendWebCount == 5) // Alarm-Daten an HomeServer ->Alarm schicken
                {
                   
                   start_web_client=7;
@@ -2752,7 +2877,18 @@ int main(void)
                   
                   sendWebCount++;
                   callbackstatus &= ~(1<< ALARMCALLBACK);
+               } // sendWebCount5
+               
+#pragma mark StromDaten an HomeServer schicken
+               if (sendWebCount == 7) // Strom-Daten an HomeServer
+               {
+                  web_client_attempts++;
+                  start_web_client=0; // ping wieder ermoeglichen
+                  
+   //               client_browse_url((char*)PSTR("/cgi-bin/strom.pl?"),CurrentDataString,(char*)PSTR(WEBSERVER_VHOST),&strom_browserresult_callback);
+
                }
+               
                
                if (sendWebCount == 8) // Error
                {
