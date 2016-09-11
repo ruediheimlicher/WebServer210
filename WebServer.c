@@ -2254,7 +2254,7 @@ int main(void)
                char		DatString[7]={};
                mk_hex2str(DatString,2,jahr);
                //lcd_puts(DatString);
-               
+  /*
  #pragma mark SolarDataString
                
 					// inbuffer wird vom Master via SPI zum Webserver geschickt.
@@ -2265,7 +2265,7 @@ int main(void)
 					
 					strcpy(SolarDataString,key1);
 					strcat(SolarDataString,sstr);
-					
+	*/
                
                /*
                 d0   vorlauf
@@ -2277,6 +2277,7 @@ int main(void)
                 d6   3 pumpe/elektro 4/alarm 7
                 d7   errors/overrun
                 */
+               /*
 					char d[5]={};
 					//char dd[4]={};
 					strcat(SolarDataString,"&d0=");
@@ -2324,11 +2325,11 @@ int main(void)
                
                
 					
-					HeizungDataString[0]='\0';
+					
 					
                //					key1="pw=\0";
                //					sstr="Pong\0";
-               
+*/
                /* In TWI_Master:
                 outbuffer[0] = (HEIZUNG << 5);					// Bit 5-7: Raumnummer
                 outbuffer[0] |= (Zeit.stunde & 0x1F);			//	Bit 0-4: Stunde, 5 bit
@@ -2351,6 +2352,7 @@ int main(void)
 //   #pragma mark HeizungDataString
 					//char d[4]={};
                /*
+                HeizungDataString[0]='\0';
 					strcpy(HeizungDataString,key1);
 					strcat(HeizungDataString,sstr);
 					
@@ -2400,6 +2402,7 @@ int main(void)
                // AlarmDataString geht an alarm.pl
 
    #pragma mark AlarmDataString
+               char d[4]={};
 					AlarmDataString[0]='\0';
 					strcpy(AlarmDataString,"pw=");
 					strcat(AlarmDataString,"Pong");
@@ -2800,6 +2803,68 @@ int main(void)
                   //strcat(SolarVarString,SolarDataString);
                   start_web_client=0;
                   
+                  // SolarDataString Start
+#pragma mark SolarDataString
+                  
+                  // inbuffer wird vom Master via SPI zum Webserver geschickt.
+                  SolarDataString[0]='\0';
+                  
+                  char key1[]="pw=";
+                  char sstr[]="Pong";
+                  
+                  strcpy(SolarDataString,key1);
+                  strcat(SolarDataString,sstr);
+                  
+                  
+                  /*
+                   d0   vorlauf
+                   d1   ruecklauf
+                   d2   boiler u
+                   d3   boiler m
+                   d4   boler o
+                   d5   kollektor
+                   d6   3 pumpe/elektro 4/alarm 7
+                   d7   errors/overrun
+                   */
+                  char d[5]={};
+                  //char dd[4]={};
+                  strcat(SolarDataString,"&d0=");
+                  itoa(inbuffer[9],d,16);
+                  strcat(SolarDataString,d);
+                  
+                  strcat(SolarDataString,"&d1=");
+                  itoa(inbuffer[10],d,16);
+                  strcat(SolarDataString,d);
+                  
+                  strcat(SolarDataString,"&d2=");
+                  itoa(inbuffer[11],d,16);
+                  strcat(SolarDataString,d);
+                  
+                  strcat(SolarDataString,"&d3=");
+                  itoa(inbuffer[12],d,16);
+                  strcat(SolarDataString,d);
+                  
+                  strcat(SolarDataString,"&d4=");
+                  itoa(inbuffer[13],d,16);
+                  strcat(SolarDataString,d);
+                  
+                  
+                  strcat(SolarDataString,"&d5=");
+                  itoa(inbuffer[14],d,16);
+                  strcat(SolarDataString,d);
+                  
+                  
+                  strcat(SolarDataString,"&d6=");
+                  itoa(inbuffer[15],d,16);
+                  strcat(SolarDataString,d);
+                  
+                  
+                  
+                  strcat(SolarDataString,"&d7=");
+                  itoa(inbuffer[16],d,16);
+                  strcat(SolarDataString,d);
+
+                  // SolarDataString end
                   
                   //lcd_gotoxy(11,0);
                   //lcd_putc('s');
@@ -2825,6 +2890,7 @@ int main(void)
                   
                   // Heizungdatastring start
 #pragma mark HeizungDataString
+                  
                   HeizungDataString[0]='\0';
                   char d[4]={};
                   char* key1="pw=\0";
