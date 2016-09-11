@@ -92,7 +92,7 @@ static char AlarmDataString[96];
 //static char ErrDataString[32];
 
 
-static char                CurrentDataString[64];
+//static char                CurrentDataString[64];
  /*
 volatile uint16_t          wattstunden=0;
 volatile uint16_t                   kilowattstunden=0;
@@ -494,7 +494,7 @@ void home_browserresult_callback(uint8_t statuscode,uint16_t datapos)
       lcd_puts("h cbOK\0");
       
       web_client_sendok++;
-      callbackstatus |= (1<< HOMECALLBACK); // OK
+      callbackstatus |= (1<< HOMECALLBACK); // Uebertragung ist OK
 
       //				sei();
       
@@ -2348,8 +2348,9 @@ int main(void)
                 uebertragen in d5
                 */
  
-   #pragma mark HeizungDataString
+//   #pragma mark HeizungDataString
 					//char d[4]={};
+               /*
 					strcpy(HeizungDataString,key1);
 					strcat(HeizungDataString,sstr);
 					
@@ -2395,7 +2396,7 @@ int main(void)
 					//sstr="Pong\0";
                
                // inbuffer wird vom Master via SPI zum Webserver geschickt.
-               
+               */
                // AlarmDataString geht an alarm.pl
 
    #pragma mark AlarmDataString
@@ -2427,15 +2428,9 @@ int main(void)
                //lcd_puts("d3 \0");
                //lcd_puthex(pendenzstatus);
 					strcat(AlarmDataString,"&d3=");
-					//itoa(inbuffer[28]++,d,16);
                itoa(pendenzstatus,d,16);
-               //lcd_putc(' ');
-               //lcd_puts(d);
 					strcat(AlarmDataString,d);
-               //lcd_putc(' ');
-               //lcd_puthex(d3counter);
-
-               // HeizungStundencode l 2773
+                // HeizungStundencode l 2773
 					strcat(AlarmDataString,"&d4=");
 					itoa(inbuffer[27],d,16);
 					strcat(AlarmDataString,d);
@@ -2456,7 +2451,6 @@ int main(void)
 					strcat(AlarmDataString,"&d8=");
 					itoa(inbuffer[23],d,16);
 					strcat(AlarmDataString,d);
-					
 					
 					strcat(AlarmDataString,"&d9=");
                //					uint8_t diff=(errCounter-oldErrCounter);
@@ -2511,7 +2505,7 @@ int main(void)
                lcd_putc(' ');
                lcd_putint(inbuffer[35]);
 
-               
+               /*
                CurrentDataString[0]='\0';
                // stromstring bilden
                //char key1[]="pw=\0";
@@ -2525,7 +2519,7 @@ int main(void)
                 strcat(CurrentDataString,"&status=");
                 itoa(inbuffer[18],d,16);
                 strcat(CurrentDataString,d);
-                /*
+                
                  // Strom HH
                strcat(CurrentDataString,"&stromhh=");
                 itoa(inbuffer[33],d,16);
@@ -2823,15 +2817,68 @@ int main(void)
 #pragma mark HeizungDaten an HomeServer schicken
                if (sendWebCount == 3) // Home-Daten an HomeServer -> home schicken
                {
-                  
                   start_web_client=5;
                   web_client_attempts++;
-                  
-                  
                   start_web_client=0;
-                  
                   //lcd_gotoxy(11,0);
                   //lcd_putc('h');
+                  
+                  // Heizungdatastring start
+#pragma mark HeizungDataString
+                  HeizungDataString[0]='\0';
+                  char d[4]={};
+                  char* key1="pw=\0";
+                  char* sstr="Pong\0";
+
+                  strcpy(HeizungDataString,key1);
+                  strcat(HeizungDataString,sstr);
+                  
+                  strcpy(HeizungDataString,"&d0="); //Bit 0-4: Stunde, 5 bit     Bit 5-7: Raumnummer
+                  
+                  itoa(inbuffer[0],d,16);
+                  strcat(HeizungDataString,d);
+                  
+                  strcat(HeizungDataString,"&d1="); //
+                  itoa(inbuffer[1],d,16);
+                  strcat(HeizungDataString,d);
+                  
+                  strcat(HeizungDataString,"&d2="); // Vorlauf
+                  itoa(inbuffer[2],d,16);
+                  strcat(HeizungDataString,d);
+                  
+                  strcat(HeizungDataString,"&d3="); // Ruecklauf
+                  itoa(inbuffer[3],d,16);
+                  strcat(HeizungDataString,d);
+                  
+                  strcat(HeizungDataString,"&d4="); // Aussen
+                  itoa(inbuffer[4],d,16);
+                  strcat(HeizungDataString,d);
+                  
+                  
+                  strcat(HeizungDataString,"&d5="); // Status, bitweise
+                  itoa(inbuffer[5],d,16);
+                  strcat(HeizungDataString,d);
+                  // Brennerstatus Bit 2
+                  // Bit 4, 5 gefiltert aus Tagplanwert von Brenner und Mode
+                  // Bit 6, 7 gefiltert aus Tagplanwert von Rinne
+                  
+                  strcat(HeizungDataString,"&d6="); // NO
+                  itoa(inbuffer[6],d,16);
+                  strcat(HeizungDataString,d);
+                  
+                  strcat(HeizungDataString,"&d7="); // innen
+                  itoa(inbuffer[7],d,16);
+                  strcat(HeizungDataString,d);
+                  
+                  //key1="pw=\0";
+                  //sstr="Pong\0";
+                  
+                  // inbuffer wird vom Master via SPI zum Webserver geschickt.
+                  
+                  // AlarmDataString geht an alarm.pl
+
+                  // Heizungdatastring end
+                  
                   
                   // Daten an Home schicken
                   client_browse_url((char*)PSTR("/cgi-bin/home.pl?"),HeizungDataString,(char*)PSTR(WEBSERVER_VHOST),&home_browserresult_callback);
@@ -2843,7 +2890,7 @@ int main(void)
                   //lcd_putint2(strlen(SolarDataString));
                   
                   sendWebCount++;
-                  callbackstatus &= ~(1<< HOMECALLBACK); // Bit zuruecksetzewn
+                  callbackstatus &= ~(1<< HOMECALLBACK); // Bit zuruecksetzen, wird in callback wieder gesetzt
                }
                
 #pragma mark AlarmDaten an HomeServer schicken
