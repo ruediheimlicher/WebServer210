@@ -79,7 +79,7 @@ volatile uint8_t txstartbuffer;
 
 //static char HeizungDataString[96];
 static char SolarDataString[96];
-static char EEPROM_String[96];
+//static char EEPROM_String[96];
 
 //static  char d[4]={};
 //static char* key1;
@@ -2609,7 +2609,7 @@ int main(void)
 					{
 						lcd_puthex(inbuffer[byteindex]);
 					}
-					
+					/*
 					EEPROM_String[0]='\0';
 					//OSZILO;
 					uint8_t i=0;
@@ -2626,6 +2626,9 @@ int main(void)
 						
 						
 					}
+                */
+               
+               
 					//OSZIHI;
 					//lcd_gotoxy(11,3);
 					//lcd_puts("   ");
@@ -3312,9 +3315,26 @@ int main(void)
 						//dat_p = print_webpage_ok(buf,(void*)"eeprom+\0");
 						
                   
+                  SolarDataString[0]='\0';
+                  //OSZILO;
+                  uint8_t i=0;
+                  char d[4]={};
+                  for (i=0;i< twi_buffer_size;i++)
+                  {
+                     itoa(inbuffer[i],(char*)d,16);
+                     strcat(SolarDataString,(char*)d);
+                     
+                     if (i < (twi_buffer_size-1))
+                     {
+                        strcat(SolarDataString,"+\0"); // Trennzeichen einfuegen
+                     }
+                     
+                     
+                  }
+
                   
 						// an HomeServer senden
-						dat_p = print_webpage_send_EEPROM_Data(buf,(void*)EEPROM_String);
+						dat_p = print_webpage_send_EEPROM_Data(buf,(void*)SolarDataString);
 						webspistatus &= ~(1<<SPI_DATA_READY_BIT);		// Data-bereit-bit zueruecksetzen
 					}
 					else
