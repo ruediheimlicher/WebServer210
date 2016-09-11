@@ -77,7 +77,7 @@ static volatile uint8_t Temperatur;
 //volatile uint8_t txbuffer[twi_buffer_size];
 volatile uint8_t txstartbuffer;
 
-static char HeizungDataString[96];
+//static char HeizungDataString[96];
 static char SolarDataString[96];
 static char EEPROM_String[96];
 
@@ -87,7 +87,7 @@ static char EEPROM_String[96];
 
 //char HeizungVarString[64];
 
-static char AlarmDataString[96];
+//static char AlarmDataString[96];
 
 //static char ErrDataString[32];
 
@@ -2401,6 +2401,7 @@ int main(void)
                */
                // AlarmDataString geht an alarm.pl
 
+               /*
    #pragma mark AlarmDataString
                char d[4]={};
 					AlarmDataString[0]='\0';
@@ -2466,6 +2467,8 @@ int main(void)
 					strcat(AlarmDataString,"&d10=");
 					itoa(SPI_ErrCounter,d,16);
 					strcat(AlarmDataString,d);
+               */
+               
                /*
                // Strom
                // Status WS
@@ -2891,50 +2894,50 @@ int main(void)
                   // Heizungdatastring start
 #pragma mark HeizungDataString
                   
-                  HeizungDataString[0]='\0';
+                  SolarDataString[0]='\0';
                   char d[4]={};
                   char* key1="pw=\0";
                   char* sstr="Pong\0";
 
-                  strcpy(HeizungDataString,key1);
-                  strcat(HeizungDataString,sstr);
+                  strcpy(SolarDataString,key1);
+                  strcat(SolarDataString,sstr);
                   
-                  strcpy(HeizungDataString,"&d0="); //Bit 0-4: Stunde, 5 bit     Bit 5-7: Raumnummer
+                  strcpy(SolarDataString,"&d0="); //Bit 0-4: Stunde, 5 bit     Bit 5-7: Raumnummer
                   
                   itoa(inbuffer[0],d,16);
-                  strcat(HeizungDataString,d);
+                  strcat(SolarDataString,d);
                   
-                  strcat(HeizungDataString,"&d1="); //
+                  strcat(SolarDataString,"&d1="); //
                   itoa(inbuffer[1],d,16);
-                  strcat(HeizungDataString,d);
+                  strcat(SolarDataString,d);
                   
-                  strcat(HeizungDataString,"&d2="); // Vorlauf
+                  strcat(SolarDataString,"&d2="); // Vorlauf
                   itoa(inbuffer[2],d,16);
-                  strcat(HeizungDataString,d);
+                  strcat(SolarDataString,d);
                   
-                  strcat(HeizungDataString,"&d3="); // Ruecklauf
+                  strcat(SolarDataString,"&d3="); // Ruecklauf
                   itoa(inbuffer[3],d,16);
-                  strcat(HeizungDataString,d);
+                  strcat(SolarDataString,d);
                   
-                  strcat(HeizungDataString,"&d4="); // Aussen
+                  strcat(SolarDataString,"&d4="); // Aussen
                   itoa(inbuffer[4],d,16);
-                  strcat(HeizungDataString,d);
+                  strcat(SolarDataString,d);
                   
                   
-                  strcat(HeizungDataString,"&d5="); // Status, bitweise
+                  strcat(SolarDataString,"&d5="); // Status, bitweise
                   itoa(inbuffer[5],d,16);
-                  strcat(HeizungDataString,d);
+                  strcat(SolarDataString,d);
                   // Brennerstatus Bit 2
                   // Bit 4, 5 gefiltert aus Tagplanwert von Brenner und Mode
                   // Bit 6, 7 gefiltert aus Tagplanwert von Rinne
                   
-                  strcat(HeizungDataString,"&d6="); // NO
+                  strcat(SolarDataString,"&d6="); // NO
                   itoa(inbuffer[6],d,16);
-                  strcat(HeizungDataString,d);
+                  strcat(SolarDataString,d);
                   
-                  strcat(HeizungDataString,"&d7="); // innen
+                  strcat(SolarDataString,"&d7="); // innen
                   itoa(inbuffer[7],d,16);
-                  strcat(HeizungDataString,d);
+                  strcat(SolarDataString,d);
                   
                   //key1="pw=\0";
                   //sstr="Pong\0";
@@ -2943,14 +2946,14 @@ int main(void)
                   
                   // AlarmDataString geht an alarm.pl
 
-                  // Heizungdatastring end
+                  // SolarDataString end
                   
                   
                   // Daten an Home schicken
-                  client_browse_url((char*)PSTR("/cgi-bin/home.pl?"),HeizungDataString,(char*)PSTR(WEBSERVER_VHOST),&home_browserresult_callback);
+                  client_browse_url((char*)PSTR("/cgi-bin/home.pl?"),SolarDataString,(char*)PSTR(WEBSERVER_VHOST),&home_browserresult_callback);
                   
                   
-                  //client_browse_url("/cgi-bin/home.pl?",HeizungDataString,WEBSERVER_VHOST,&home_browserresult_callback);
+                  //client_browse_url("/cgi-bin/home.pl?",SolarDataString,WEBSERVER_VHOST,&home_browserresult_callback);
                   
                   //lcd_puts("cgi l:\0");
                   //lcd_putint2(strlen(SolarDataString));
@@ -2972,8 +2975,77 @@ int main(void)
                   //lcd_gotoxy(11,0);
                   //lcd_putc('a');
                   
+                  // AlarmDataString start
+#pragma mark AlarmDataString
+                  char d[4]={};
+                  SolarDataString[0]='\0';
+                  strcpy(SolarDataString,"pw=");
+                  strcat(SolarDataString,"Pong");
+                  
+                  // Alarm vom Master:
+                  // Bits:
+                  // WASSERALARMESTRICH    1
+                  // TIEFKUEHLALARM        3
+                  // WASSERALARMKELLER     4
+                  strcat(SolarDataString,"&d0=");
+                  itoa(inbuffer[31],d,16);
+                  strcat(SolarDataString,d);
+                  
+                  // TWI-errcount Master> main> l 1672
+                  strcat(SolarDataString,"&d1=");
+                  itoa(inbuffer[30],d,16);
+                  strcat(SolarDataString,d);
+                  
+                  // Echo von WoZi
+                  strcat(SolarDataString,"&d2=");
+                  itoa(inbuffer[29],d,16);
+                  strcat(SolarDataString,d);
+                  
+                  // pendenzstatus
+                  //lcd_gotoxy(0,3);
+                  //lcd_puts("d3 \0");
+                  //lcd_puthex(pendenzstatus);
+                  strcat(SolarDataString,"&d3=");
+                  itoa(pendenzstatus,d,16);
+                  strcat(SolarDataString,d);
+                  // HeizungStundencode l 2773
+                  strcat(SolarDataString,"&d4=");
+                  itoa(inbuffer[27],d,16);
+                  strcat(SolarDataString,d);
+                  
+                  strcat(SolarDataString,"&d5=");
+                  itoa(inbuffer[26],d,16);      // EEPROM_Err;
+                  strcat(SolarDataString,d);
+                  
+                  strcat(SolarDataString,"&d6=");
+                  itoa(inbuffer[25],d,16);      // Write_Err
+                  strcat(SolarDataString,d);
+                  
+                  strcat(SolarDataString,"&d7=");
+                  itoa(inbuffer[24],d,16);      // Read_Err
+                  strcat(SolarDataString,d);
+                  
+                  // Zeit.minute, 6 bit
+                  strcat(SolarDataString,"&d8=");
+                  itoa(inbuffer[23],d,16);
+                  strcat(SolarDataString,d);
+                  
+                  strcat(SolarDataString,"&d9=");
+                  //					uint8_t diff=(errCounter-oldErrCounter);
+                  //					itoa(diff++,d,16); // nur Differenz übermitteln
+                  
+                  itoa(errCounter,d,16);
+                  strcat(SolarDataString,d);
+                  //oldErrCounter = errCounter;
+                  
+                  strcat(SolarDataString,"&d10=");
+                  itoa(SPI_ErrCounter,d,16);
+                  strcat(SolarDataString,d);
+                  
+
+                  // SolarDataString end
                   // Daten an Alarm schicken
-                  client_browse_url((char*)PSTR("/cgi-bin/alarm.pl?"),AlarmDataString,(char*)PSTR(WEBSERVER_VHOST),&alarm_browserresult_callback);
+                  client_browse_url((char*)PSTR("/cgi-bin/alarm.pl?"),SolarDataString,(char*)PSTR(WEBSERVER_VHOST),&alarm_browserresult_callback);
                   
                   if (pendenzstatus & (1<<RESETREPORT))
                   {
@@ -2984,7 +3056,7 @@ int main(void)
                   }
                   
                   
-                  //client_browse_url("/cgi-bin/alarm.pl?",AlarmDataString,WEBSERVER_VHOST,&alarm_browserresult_callback);
+                  //client_browse_url("/cgi-bin/alarm.pl?",SolarDataString,WEBSERVER_VHOST,&alarm_browserresult_callback);
                   
                   //lcd_puts("cgi l:\0");
                   //lcd_putint2(strlen(SolarDataString));
@@ -3239,6 +3311,8 @@ int main(void)
 					{
 						//dat_p = print_webpage_ok(buf,(void*)"eeprom+\0");
 						
+                  
+                  
 						// an HomeServer senden
 						dat_p = print_webpage_send_EEPROM_Data(buf,(void*)EEPROM_String);
 						webspistatus &= ~(1<<SPI_DATA_READY_BIT);		// Data-bereit-bit zueruecksetzen
@@ -3370,7 +3444,7 @@ int main(void)
 #pragma mark cmd 26
                dat_p=http200ok(); // Header setzen
                dat_p=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<h1>200 OK</h1>"));
-               dat_p = print_webpage_data(buf,(void*)HeizungDataString); // pw=Pong&strom=1234
+           //    dat_p = print_webpage_data(buf,(void*)HeizungDataString); // pw=Pong&strom=1234
                cronstatus |= (1<<CRON_HOME);
             }
             else if (cmd == 27)	// Data alarm lesen
@@ -3378,7 +3452,7 @@ int main(void)
 #pragma mark cmd 27
                dat_p=http200ok(); // Header setzen
                dat_p=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<h1>200 OK</h1>"));
-               dat_p = print_webpage_data(buf,(void*)AlarmDataString); // pw=Pong&strom=1234
+    //           dat_p = print_webpage_data(buf,(void*)AlarmDataString); // pw=Pong&strom=1234
                cronstatus |= (1<<CRON_ALARM);
             }
             
