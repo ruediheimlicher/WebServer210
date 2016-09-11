@@ -78,7 +78,7 @@ static volatile uint8_t Temperatur;
 volatile uint8_t txstartbuffer;
 
 //static char HeizungDataString[96];
-static char SolarDataString[96];
+static char WebDataString[96];
 //static char EEPROM_String[96];
 
 //static  char d[4]={};
@@ -123,7 +123,7 @@ volatile uint8_t lasttagdesmonats = 0;
 volatile uint8_t monat = 1; // datum monat: 1-3 jahr ab 2010: 4-7
 volatile uint8_t jahr = 1; // datum monat: 1-3 jahr ab 2010: 4-7
 
-volatile uint16_t weblencounter=0;
+//volatile uint16_t weblencounter=0;
 
 volatile uint8_t sendintervall=0;
 
@@ -545,15 +545,16 @@ void strom_browserresult_callback(uint8_t statuscode,uint16_t datapos)
    if (statuscode==0)
    {
       
-      lcd_gotoxy(12,3);
+      lcd_gotoxy(0,0);
       lcd_puts("      \0");
-      lcd_gotoxy(12,3);
-      lcd_puts("s cbOK\0");
-      
+      lcd_gotoxy(0,0);
+      lcd_puts("c cbOK\0");
+      web_client_sendok++;
+      callbackstatus |= (1<< STROMCALLBACK); // OK
       // lcd_gotoxy(19,0);
       // lcd_putc(' ');
-      lcd_gotoxy(19,0);
-      lcd_putc('+');
+      //lcd_gotoxy(19,0);
+      //lcd_putc('+');
       
       /*
       webstatus &= ~(1<<DATASEND); // Datasend auftrag ok
@@ -566,23 +567,23 @@ void strom_browserresult_callback(uint8_t statuscode,uint16_t datapos)
       webstatus |= (1<<CURRENTWAIT); // Beim naechsten Impuls Messungen wieder starten
       sei();
       
-      web_client_sendok++;
+      
       */
       
    }
    else
    {
       
-      lcd_gotoxy(0,3);
+      lcd_gotoxy(0,0);
       lcd_puts("      \0");
-      lcd_gotoxy(0,3);
-      lcd_puts("s cber\0");
+      lcd_gotoxy(0,0);
+      lcd_puts("c cber\0");
       lcd_puthex(statuscode);
-      
-      lcd_gotoxy(19,0);
-      lcd_putc(' ');
-      lcd_gotoxy(19,0);
-      lcd_putc('-');
+      callbackstatus &= ~(1<< STROMCALLBACK); // not OK
+ //     lcd_gotoxy(19,0);
+ //     lcd_putc(' ');
+ //     lcd_gotoxy(19,0);
+ //     lcd_putc('-');
    }
 }
 
@@ -2255,16 +2256,16 @@ int main(void)
                mk_hex2str(DatString,2,jahr);
                //lcd_puts(DatString);
   /*
- #pragma mark SolarDataString
+ #pragma mark WebDataString
                
 					// inbuffer wird vom Master via SPI zum Webserver geschickt.
-					SolarDataString[0]='\0';
+					WebDataString[0]='\0';
 					
 					char key1[]="pw=";
 					char sstr[]="Pong";
 					
-					strcpy(SolarDataString,key1);
-					strcat(SolarDataString,sstr);
+					strcpy(WebDataString,key1);
+					strcat(WebDataString,sstr);
 	*/
                
                /*
@@ -2280,48 +2281,48 @@ int main(void)
                /*
 					char d[5]={};
 					//char dd[4]={};
-					strcat(SolarDataString,"&d0=");
+					strcat(WebDataString,"&d0=");
 					itoa(inbuffer[9],d,16);
-					strcat(SolarDataString,d);
+					strcat(WebDataString,d);
 					
-					strcat(SolarDataString,"&d1=");
+					strcat(WebDataString,"&d1=");
 					itoa(inbuffer[10],d,16);
-					strcat(SolarDataString,d);
+					strcat(WebDataString,d);
 					
-					strcat(SolarDataString,"&d2=");
+					strcat(WebDataString,"&d2=");
 					itoa(inbuffer[11],d,16);
-					strcat(SolarDataString,d);
+					strcat(WebDataString,d);
 					
-					strcat(SolarDataString,"&d3=");
+					strcat(WebDataString,"&d3=");
 					itoa(inbuffer[12],d,16);
-					strcat(SolarDataString,d);
+					strcat(WebDataString,d);
 					
-					strcat(SolarDataString,"&d4=");
+					strcat(WebDataString,"&d4=");
 					itoa(inbuffer[13],d,16);
-					strcat(SolarDataString,d);
+					strcat(WebDataString,d);
 					
 					
-					strcat(SolarDataString,"&d5=");
+					strcat(WebDataString,"&d5=");
 					itoa(inbuffer[14],d,16);
-					strcat(SolarDataString,d);
+					strcat(WebDataString,d);
 					
 					
-					strcat(SolarDataString,"&d6=");
+					strcat(WebDataString,"&d6=");
                itoa(inbuffer[15],d,16);
-					strcat(SolarDataString,d);
+					strcat(WebDataString,d);
 					
                
 
-					strcat(SolarDataString,"&d7=");
+					strcat(WebDataString,"&d7=");
 					itoa(inbuffer[16],d,16);
-					strcat(SolarDataString,d);
+					strcat(WebDataString,d);
 
  //              lcd_gotoxy(0,3);
                //lcd_puts("s \0");
 //               lcd_puthex(inbuffer[15]);
  //              lcd_puthex(inbuffer[16]);
 
-               //uint8_t l= strlen(SolarDataString);
+               //uint8_t l= strlen(WebDataString);
                
                
 					
@@ -2570,13 +2571,13 @@ int main(void)
 					
 					//	lcd_gotoxy(0,1);
 					//	lcd_puts("l:\0");
-					//	lcd_putint2(strlen(SolarDataString));
-					//lcd_puts(SolarDataString);
+					//	lcd_putint2(strlen(WebDataString));
+					//lcd_puts(WebDataString);
 					//lcd_puts(SolarVarString);
 					
 					// 5.8.10
 					sendWebCount++;
-					//		sendWebCount=1; // SolarDataString schicken
+					//		sendWebCount=1; // WebDataString schicken
 					
 					//						lcd_gotoxy(5,0);
 					//						lcd_puts("cnt:\0");
@@ -2806,20 +2807,20 @@ int main(void)
                   start_web_client=2;
                   web_client_attempts++;
                   
-                  //strcat(SolarVarString,SolarDataString);
+                  //strcat(SolarVarString,WebDataString);
                   start_web_client=0;
                   
-                  // SolarDataString Start
-#pragma mark SolarDataString
+                  // WebDataString Start
+#pragma mark WebDataString
                   
                   // inbuffer wird vom Master via SPI zum Webserver geschickt.
-                  SolarDataString[0]='\0';
+                  WebDataString[0]='\0';
                   
                   char key1[]="pw=";
                   char sstr[]="Pong";
                   
-                  strcpy(SolarDataString,key1);
-                  strcat(SolarDataString,sstr);
+                  strcpy(WebDataString,key1);
+                  strcat(WebDataString,sstr);
                   
                   
                   /*
@@ -2834,49 +2835,49 @@ int main(void)
                    */
                   char d[5]={};
                   //char dd[4]={};
-                  strcat(SolarDataString,"&d0=");
+                  strcat(WebDataString,"&d0=");
                   itoa(inbuffer[9],d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   
-                  strcat(SolarDataString,"&d1=");
+                  strcat(WebDataString,"&d1=");
                   itoa(inbuffer[10],d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   
-                  strcat(SolarDataString,"&d2=");
+                  strcat(WebDataString,"&d2=");
                   itoa(inbuffer[11],d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   
-                  strcat(SolarDataString,"&d3=");
+                  strcat(WebDataString,"&d3=");
                   itoa(inbuffer[12],d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   
-                  strcat(SolarDataString,"&d4=");
+                  strcat(WebDataString,"&d4=");
                   itoa(inbuffer[13],d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   
                   
-                  strcat(SolarDataString,"&d5=");
+                  strcat(WebDataString,"&d5=");
                   itoa(inbuffer[14],d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   
                   
-                  strcat(SolarDataString,"&d6=");
+                  strcat(WebDataString,"&d6=");
                   itoa(inbuffer[15],d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   
                   
                   
-                  strcat(SolarDataString,"&d7=");
+                  strcat(WebDataString,"&d7=");
                   itoa(inbuffer[16],d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
 
-                  // SolarDataString end
+                  // WebDataString end
                   
                   //lcd_gotoxy(11,0);
                   //lcd_putc('s');
                   
                   // Daten an Solar schicken
-                  client_browse_url((char*)PSTR("/cgi-bin/solar.pl?"),SolarDataString,(char*)PSTR(WEBSERVER_VHOST),&solar_browserresult_callback);
+                  client_browse_url((char*)PSTR("/cgi-bin/solar.pl?"),WebDataString,(char*)PSTR(WEBSERVER_VHOST),&solar_browserresult_callback);
                   
                   
                   sendWebCount++;
@@ -2897,50 +2898,50 @@ int main(void)
                   // Heizungdatastring start
 #pragma mark HeizungDataString
                   
-                  SolarDataString[0]='\0';
+                  WebDataString[0]='\0';
                   char d[4]={};
                   char* key1="pw=\0";
                   char* sstr="Pong\0";
 
-                  strcpy(SolarDataString,key1);
-                  strcat(SolarDataString,sstr);
+                  strcpy(WebDataString,key1);
+                  strcat(WebDataString,sstr);
                   
-                  strcpy(SolarDataString,"&d0="); //Bit 0-4: Stunde, 5 bit     Bit 5-7: Raumnummer
+                  strcpy(WebDataString,"&d0="); //Bit 0-4: Stunde, 5 bit     Bit 5-7: Raumnummer
                   
                   itoa(inbuffer[0],d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   
-                  strcat(SolarDataString,"&d1="); //
+                  strcat(WebDataString,"&d1="); //
                   itoa(inbuffer[1],d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   
-                  strcat(SolarDataString,"&d2="); // Vorlauf
+                  strcat(WebDataString,"&d2="); // Vorlauf
                   itoa(inbuffer[2],d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   
-                  strcat(SolarDataString,"&d3="); // Ruecklauf
+                  strcat(WebDataString,"&d3="); // Ruecklauf
                   itoa(inbuffer[3],d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   
-                  strcat(SolarDataString,"&d4="); // Aussen
+                  strcat(WebDataString,"&d4="); // Aussen
                   itoa(inbuffer[4],d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   
                   
-                  strcat(SolarDataString,"&d5="); // Status, bitweise
+                  strcat(WebDataString,"&d5="); // Status, bitweise
                   itoa(inbuffer[5],d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   // Brennerstatus Bit 2
                   // Bit 4, 5 gefiltert aus Tagplanwert von Brenner und Mode
                   // Bit 6, 7 gefiltert aus Tagplanwert von Rinne
                   
-                  strcat(SolarDataString,"&d6="); // NO
+                  strcat(WebDataString,"&d6="); // NO
                   itoa(inbuffer[6],d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   
-                  strcat(SolarDataString,"&d7="); // innen
+                  strcat(WebDataString,"&d7="); // innen
                   itoa(inbuffer[7],d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   
                   //key1="pw=\0";
                   //sstr="Pong\0";
@@ -2949,17 +2950,17 @@ int main(void)
                   
                   // AlarmDataString geht an alarm.pl
 
-                  // SolarDataString end
+                  // WebDataString end
                   
                   
                   // Daten an Home schicken
-                  client_browse_url((char*)PSTR("/cgi-bin/home.pl?"),SolarDataString,(char*)PSTR(WEBSERVER_VHOST),&home_browserresult_callback);
+                  client_browse_url((char*)PSTR("/cgi-bin/home.pl?"),WebDataString,(char*)PSTR(WEBSERVER_VHOST),&home_browserresult_callback);
                   
                   
-                  //client_browse_url("/cgi-bin/home.pl?",SolarDataString,WEBSERVER_VHOST,&home_browserresult_callback);
+                  //client_browse_url("/cgi-bin/home.pl?",WebDataString,WEBSERVER_VHOST,&home_browserresult_callback);
                   
                   //lcd_puts("cgi l:\0");
-                  //lcd_putint2(strlen(SolarDataString));
+                  //lcd_putint2(strlen(WebDataString));
                   
                   sendWebCount++;
                   callbackstatus &= ~(1<< HOMECALLBACK); // Bit zuruecksetzen, wird in callback wieder gesetzt
@@ -2981,74 +2982,74 @@ int main(void)
                   // AlarmDataString start
 #pragma mark AlarmDataString
                   char d[4]={};
-                  SolarDataString[0]='\0';
-                  strcpy(SolarDataString,"pw=");
-                  strcat(SolarDataString,"Pong");
+                  WebDataString[0]='\0';
+                  strcpy(WebDataString,"pw=");
+                  strcat(WebDataString,"Pong");
                   
                   // Alarm vom Master:
                   // Bits:
                   // WASSERALARMESTRICH    1
                   // TIEFKUEHLALARM        3
                   // WASSERALARMKELLER     4
-                  strcat(SolarDataString,"&d0=");
+                  strcat(WebDataString,"&d0=");
                   itoa(inbuffer[31],d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   
                   // TWI-errcount Master> main> l 1672
-                  strcat(SolarDataString,"&d1=");
+                  strcat(WebDataString,"&d1=");
                   itoa(inbuffer[30],d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   
                   // Echo von WoZi
-                  strcat(SolarDataString,"&d2=");
+                  strcat(WebDataString,"&d2=");
                   itoa(inbuffer[29],d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   
                   // pendenzstatus
                   //lcd_gotoxy(0,3);
                   //lcd_puts("d3 \0");
                   //lcd_puthex(pendenzstatus);
-                  strcat(SolarDataString,"&d3=");
+                  strcat(WebDataString,"&d3=");
                   itoa(pendenzstatus,d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   // HeizungStundencode l 2773
-                  strcat(SolarDataString,"&d4=");
+                  strcat(WebDataString,"&d4=");
                   itoa(inbuffer[27],d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   
-                  strcat(SolarDataString,"&d5=");
+                  strcat(WebDataString,"&d5=");
                   itoa(inbuffer[26],d,16);      // EEPROM_Err;
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   
-                  strcat(SolarDataString,"&d6=");
+                  strcat(WebDataString,"&d6=");
                   itoa(inbuffer[25],d,16);      // Write_Err
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   
-                  strcat(SolarDataString,"&d7=");
+                  strcat(WebDataString,"&d7=");
                   itoa(inbuffer[24],d,16);      // Read_Err
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   
                   // Zeit.minute, 6 bit
-                  strcat(SolarDataString,"&d8=");
+                  strcat(WebDataString,"&d8=");
                   itoa(inbuffer[23],d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   
-                  strcat(SolarDataString,"&d9=");
+                  strcat(WebDataString,"&d9=");
                   //					uint8_t diff=(errCounter-oldErrCounter);
                   //					itoa(diff++,d,16); // nur Differenz übermitteln
                   
                   itoa(errCounter,d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   //oldErrCounter = errCounter;
                   
-                  strcat(SolarDataString,"&d10=");
+                  strcat(WebDataString,"&d10=");
                   itoa(SPI_ErrCounter,d,16);
-                  strcat(SolarDataString,d);
+                  strcat(WebDataString,d);
                   
 
-                  // SolarDataString end
+                  // WebDataString end
                   // Daten an Alarm schicken
-                  client_browse_url((char*)PSTR("/cgi-bin/alarm.pl?"),SolarDataString,(char*)PSTR(WEBSERVER_VHOST),&alarm_browserresult_callback);
+                  client_browse_url((char*)PSTR("/cgi-bin/alarm.pl?"),WebDataString,(char*)PSTR(WEBSERVER_VHOST),&alarm_browserresult_callback);
                   
                   if (pendenzstatus & (1<<RESETREPORT))
                   {
@@ -3059,10 +3060,10 @@ int main(void)
                   }
                   
                   
-                  //client_browse_url("/cgi-bin/alarm.pl?",SolarDataString,WEBSERVER_VHOST,&alarm_browserresult_callback);
+                  //client_browse_url("/cgi-bin/alarm.pl?",WebDataString,WEBSERVER_VHOST,&alarm_browserresult_callback);
                   
                   //lcd_puts("cgi l:\0");
-                  //lcd_putint2(strlen(SolarDataString));
+                  //lcd_putint2(strlen(WebDataString));
                   
                   sendWebCount++;
                   callbackstatus &= ~(1<< ALARMCALLBACK);
@@ -3073,8 +3074,105 @@ int main(void)
                {
                   web_client_attempts++;
                   start_web_client=0; // ping wieder ermoeglichen
+                  // currentdatastring start
+#pragma mark CurrentDataString
                   
-   //               client_browse_url((char*)PSTR("/cgi-bin/strom.pl?"),CurrentDataString,(char*)PSTR(WEBSERVER_VHOST),&strom_browserresult_callback);
+                  lcd_gotoxy(0,3);
+                  //lcd_putc('t');
+                  //lcd_putint(wstemperatur);
+                  //lcd_putc(' ');
+                  
+                  //lcd_putc('s');
+                  //lcd_putint(inbuffer[18]);
+                  //lcd_putc('*');
+                  //lcd_putint(inbuffer[33]);
+                  //lcd_putc(' ');
+                  //lcd_putint(inbuffer[34]);
+                  //lcd_putc(' ');
+                  //lcd_putint(inbuffer[35]);
+                  
+                  
+                   WebDataString[0]='\0';
+                  char d[4]={};
+                   // stromstring bilden
+                   //char key1[]="pw=\0";
+                   //char sstr[]="Pong\0";
+                   
+                   strcpy(WebDataString,"pw=");
+                   strcat(WebDataString,"Pong");
+                   // Strom
+                   // Status WS
+                   
+                   strcat(WebDataString,"&status=");
+                   itoa(inbuffer[18],d,16);
+                   strcat(WebDataString,d);
+                   
+                   // Strom HH
+                   strcat(WebDataString,"&stromhh=");
+                   itoa(inbuffer[33],d,16);
+                   strcat(WebDataString,d);
+                   
+                   // Strom H
+                   strcat(WebDataString,"&stromh=");
+                   itoa(inbuffer[34],d,16);
+                   strcat(WebDataString,d);
+                   
+                   // Strom L
+                   strcat(WebDataString,"&stroml=");
+                   itoa(inbuffer[35],d,16);
+                   strcat(WebDataString,d);
+                   
+                   char webstromstring[16]={};
+                   /*
+                   leistung=0;
+                   uint32_t impulsmittelwert = inbuffer[33] + 0xFF*inbuffer[34] + 0xFFFF*inbuffer[35];
+                   if (impulsmittelwert)
+                   {
+                   leistung = 360.0/impulsmittelwert*100000.0;// 480us
+                   }
+                   
+                   // webleistung = (uint32_t)360.0/impulsmittelwert*1000000.0;
+                   webleistung = (uint32_t)360.0/impulsmittelwert*100000.0;
+                   dtostrf(webleistung,10,0,stromstring); // 800us
+                   strcpy(webstromstring,stromstring);
+                   
+                   
+                   
+                   char* tempstromstring = (char*)trimwhitespace(webstromstring);
+                   strcat(CurrentDataString,tempstromstring);
+                   // CurrentDataString end
+                   */
+                  
+                  //in_startdaten=0;
+                  
+                  //lcd_clr_line(0);
+                  
+                  //out_startdaten=DATATASK;
+                  
+                  //	lcd_gotoxy(0,1);
+                  //	lcd_puts("l:\0");
+                  //	lcd_putint2(strlen(WebDataString));
+                  //lcd_puts(WebDataString);
+                  //lcd_puts(SolarVarString);
+                  
+                  // 5.8.10
+                  sendWebCount++;
+                  //		sendWebCount=1; // WebDataString schicken
+                  
+                  //						lcd_gotoxy(5,0);
+                  //						lcd_puts("cnt:\0");
+                  //						lcd_puthex(sendWebCount);
+                  
+                  
+                  // *** SPI senden
+                  //StartTransfer(WebRxStartDaten++,1);
+
+                  // currentdatastring end
+                  
+                  
+                  client_browse_url((char*)PSTR("/cgi-bin/current.pl?"),WebDataString,(char*)PSTR(WEBSERVER_VHOST),&strom_browserresult_callback);
+                  
+                  callbackstatus &= ~(1<< STROMCALLBACK);
 
                }
                
@@ -3117,7 +3215,7 @@ int main(void)
 				dat_p=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<h1>200 OK</h1>"));
 				//		dat_p=fill_tcp_data_p(buf,dat_p,PSTR("<h1>HomeCentral 200 OK</h1>"));
 				dat_p=print_webpage_status(buf);
-            weblencounter = dat_p;
+            //weblencounter = dat_p;
             //lcd_gotoxy(15,3);
             //lcd_putint12(weblencounter);
 				goto SENDTCP;
@@ -3315,18 +3413,18 @@ int main(void)
 						//dat_p = print_webpage_ok(buf,(void*)"eeprom+\0");
 						
                   
-                  SolarDataString[0]='\0';
+                  WebDataString[0]='\0';
                   //OSZILO;
                   uint8_t i=0;
                   char d[4]={};
                   for (i=0;i< twi_buffer_size;i++)
                   {
                      itoa(inbuffer[i],(char*)d,16);
-                     strcat(SolarDataString,(char*)d);
+                     strcat(WebDataString,(char*)d);
                      
                      if (i < (twi_buffer_size-1))
                      {
-                        strcat(SolarDataString,"+\0"); // Trennzeichen einfuegen
+                        strcat(WebDataString,"+\0"); // Trennzeichen einfuegen
                      }
                      
                      
@@ -3334,7 +3432,7 @@ int main(void)
 
                   
 						// an HomeServer senden
-						dat_p = print_webpage_send_EEPROM_Data(buf,(void*)SolarDataString);
+						dat_p = print_webpage_send_EEPROM_Data(buf,(void*)WebDataString);
 						webspistatus &= ~(1<<SPI_DATA_READY_BIT);		// Data-bereit-bit zueruecksetzen
 					}
 					else
@@ -3456,7 +3554,7 @@ int main(void)
 #pragma mark cmd 25
                dat_p=http200ok(); // Header setzen
                dat_p=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<h1>200 OK</h1>"));
-               dat_p = print_webpage_data(buf,(void*)SolarDataString); // pw=Pong&strom=1234
+               dat_p = print_webpage_data(buf,(void*)WebDataString); // pw=Pong&strom=1234
                cronstatus |= (1<<CRON_SOLAR);
             }
             else if (cmd == 26)	// Data home lesen
