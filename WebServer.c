@@ -2123,7 +2123,7 @@ int main(void)
 		
 		rxdata=0;
 		
-		if (sendWebCount >8)
+		if (sendWebCount >10)
 		{
 			//start_web_client=1;
 			sendWebCount=0;
@@ -2686,7 +2686,7 @@ int main(void)
                 outbuffer[2]=EEPROM_Err;
 
                 */
-					sendWebCount=8; // Error senden
+					sendWebCount=10; // Error senden
                
 				}break;
 					
@@ -3185,10 +3185,13 @@ int main(void)
                   
                   callbackstatus &= ~(1<< STROMCALLBACK);
 
+               
+               
+               
                }
                
                
-               if (sendWebCount == 8) // Error
+               if (sendWebCount == 10) // Error
                {
                   
                   
