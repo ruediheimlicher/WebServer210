@@ -1991,7 +1991,7 @@ int main(void)
       }
       
 		loopcount0++;
-		if (loopcount0>=0x2FFF)
+		if (loopcount0>=0x4FFF)
 		{
 			loopcount0=0;
 			// *** SPI senden
@@ -2943,6 +2943,8 @@ int main(void)
                   itoa(inbuffer[7],d,16);
                   strcat(WebDataString,d);
                   
+                  
+                  
                   //key1="pw=\0";
                   //sstr="Pong\0";
                   
@@ -2969,7 +2971,6 @@ int main(void)
 #pragma mark AlarmDaten an HomeServer schicken
                if (sendWebCount == 5) // Alarm-Daten an HomeServer ->Alarm schicken
                {
-                  
                   
                   start_web_client=7;
                   web_client_attempts++;
@@ -3121,6 +3122,8 @@ int main(void)
                    strcat(WebDataString,"&stroml=");
                    itoa(inbuffer[35],d,16);
                    strcat(WebDataString,d);
+                  
+                  
                    
                    char webstromstring[16]={};
                    /*
