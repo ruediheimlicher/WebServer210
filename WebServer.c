@@ -149,7 +149,7 @@ uint16_t Tastenprellen=0x01F;
 
 
 static volatile uint8_t pingnow=1; // 1 means time has run out send a ping now
-static volatile uint8_t resetnow=0;
+static volatile uint8_t uploadcounter=0;
 static volatile uint8_t reinitmac=0;
 //static uint8_t sendping=1; // 1 we send ping (and receive ping), 0 we receive ping only
 static volatile uint8_t pingtimer=1; // > 0 means wd running
@@ -342,7 +342,7 @@ ISR(TIMER0_COMPA_vect)
 {
    
    TCNT0=0;
-	if(EventCounter < 0x8FFF)// am Zaehlen, warten auf beenden von TWI // 0x1FF: 2 s
+	if(EventCounter < 0x9FFF)// am Zaehlen, warten auf beenden von TWI // 0x1FF: 2 s
 	{
 		
 	}
@@ -356,6 +356,7 @@ ISR(TIMER0_COMPA_vect)
 		{
     //     if (cronstatus & (1<<CRON_HOME)) // eventuell nach xxx verschieben
          {
+            uploadcounter++;
             webspistatus |= (1<< SPI_SHIFT_BIT);         // shift_out veranlassen
    //         cronstatus &=  ~ (1<<CRON_HOME); // nur ein shift-out nach cron-Request
          }
@@ -515,6 +516,7 @@ void home_browserresult_callback(uint8_t statuscode,uint16_t datapos)
 void alarm_browserresult_callback(uint8_t statuscode,uint16_t datapos)
 {
    // datapos is not used in this example
+   uploadcounter = 0;
    if (statuscode==0)
    {
       
@@ -1134,7 +1136,6 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
 					lcd_putc('*');
 					return (10);
 				}
-   
             
             // Auslesen der Daten
             if (find_key_val(str,actionbuf,10,"data")) // HomeCentral reseten
@@ -1844,10 +1845,11 @@ int main(void)
 	//DDRB|= (1<<DDB1); // LED, enable PB1, LED as output
 	//PORTD &=~(1<<PD0);;
 #pragma mark web init
-<<<<<<< HEAD
-=======
    
->>>>>>> 64be0da99f21c469c4a74c4a3975cfebc3777924
+//<<<<<<< HEAD
+//=======
+   
+//>>>>>>> 64be0da99f21c469c4a74c4a3975cfebc3777924
 	//init the web server ethernet/ip layer:
    if (TESTSERVER)
    {
@@ -1855,11 +1857,11 @@ int main(void)
       
       //myip[3] = 213;
 
-<<<<<<< HEAD
+//<<<<<<< HEAD
       init_ip_arp_udp_tcp(mymac,myip,MYTESTWWWPORT);
-=======
+//=======
       init_ip_arp_udp_tcp(mymac,mytestip,TESTMYWWWPORT);
->>>>>>> 64be0da99f21c469c4a74c4a3975cfebc3777924
+//>>>>>>> 64be0da99f21c469c4a74c4a3975cfebc3777924
       // init the web client:
       client_set_gwip(gwip);  // e.g internal IP of dsl router
       
@@ -2022,7 +2024,7 @@ int main(void)
          
 			if (LOOPLEDPORTPIN &(1<<LOOPLED))
 			{
-				sec++;
+				sec++; // zaehler fuer verzoegerung von Ping-aufnahme
 			}
 			LOOPLEDPORT ^=(1<<LOOPLED);
 			
@@ -2170,15 +2172,15 @@ int main(void)
 			// Daten auf SPI schieben
 			// ******************************
 #pragma mark shift
-         
+         lcd_gotoxy(17,0);
+         lcd_puthex(uploadcounter);
+        
   			// Marker fuer SPI-Event setzen
 			lcd_gotoxy(19,0);
 			lcd_putc('*');
          
          //PORTD &= ~(1<<RELAISPIN);
 			SPI_shift_out();
-         
-			
 			// Input-Daten der SPI-Aktion Daten von Master
 			
 			//	if (in_startdaten==0xB8)
@@ -2242,7 +2244,6 @@ int main(void)
                // Datum und Uhrzeit von inbuffer lesen
                stunde = (inbuffer[46] ); // Stunde, Bit 0-4
                minute = (inbuffer[47] ); // Minute, Bit 0-5
-               
                
                tagdesmonats = inbuffer[40] ; // datum tag
 
@@ -2757,6 +2758,7 @@ int main(void)
 			cli();
 			
 			dat_p=packetloop_icmp_tcp(buf,enc28j60PacketReceive(BUFFER_SIZE, buf));
+         buf[BUFFER_SIZE]='\0';
 			//dat_p=1;
 			
 			if(dat_p==0) // Kein Aufruf, eigene Daten senden an Homeserver
@@ -2778,7 +2780,7 @@ int main(void)
 					lcd_puts("ping ok\0");
 					lcd_clr_line(1);
 					delay_ms(100);
-					start_web_client=2;
+					start_web_client=2; // if-anfrage bei naechster Schlaufe ueberspringen
 					web_client_attempts++;
 					
 					
@@ -2801,7 +2803,7 @@ int main(void)
 				// reset after a delay to prevent permanent bouncing
 				if (sec>10 && start_web_client==5)
 				{
-					start_web_client=0;
+					start_web_client=0;// ping wieder ermoeglichen
 				}
 
 #pragma mark SolarDaten an HomeServer schicken
@@ -2816,7 +2818,7 @@ int main(void)
                   web_client_attempts++;
                   
                   //strcat(SolarVarString,WebDataString);
-                  start_web_client=0;
+                  start_web_client=0;// ping wieder ermoeglichen
                   
                   // WebDataString Start
 #pragma mark WebDataString
@@ -2899,7 +2901,7 @@ int main(void)
                {
                   start_web_client=5;
                   web_client_attempts++;
-                  start_web_client=0;
+                  start_web_client=0;// ping wieder ermoeglichen
                   //lcd_gotoxy(11,0);
                   //lcd_putc('h');
                   
@@ -2919,7 +2921,7 @@ int main(void)
                   itoa(inbuffer[0],d,16);
                   strcat(WebDataString,d);
                   
-                  strcat(WebDataString,"&d1="); //
+                  strcat(WebDataString,"&d1="); // Zeit.minute & 0x3F;		Bits 0-5: Minute, 6 bit Bits 6,7: Art=1
                   itoa(inbuffer[1],d,16);
                   strcat(WebDataString,d);
                   
@@ -2983,7 +2985,7 @@ int main(void)
                   start_web_client=7;
                   web_client_attempts++;
                   
-                  start_web_client=0;
+                  start_web_client=0;// ping wieder ermoeglichen
                   
                   //lcd_gotoxy(11,0);
                   //lcd_putc('a');
@@ -3191,7 +3193,7 @@ int main(void)
                }
                
                
-               if (sendWebCount == 10) // Error
+               if (sendWebCount == 10) // Error, setzt sendWebCount am Anfang von while zurueck
                {
                   
                   
@@ -3238,7 +3240,7 @@ int main(void)
 			{
 				// Teil der URL mit Form xyz?uv=... analysieren
 				
-#pragma mark cmd
+#pragma mark cmd analyse_get_url
 				
 //				out_startdaten=DATATASK;	// default
 				
