@@ -508,7 +508,6 @@ void home_browserresult_callback(uint8_t statuscode,uint16_t datapos)
       lcd_puts("h cber\0");
       lcd_puthex(statuscode);
       callbackstatus &= ~(1<< HOMECALLBACK); // Err
-
    }
 }
 
@@ -519,7 +518,6 @@ void alarm_browserresult_callback(uint8_t statuscode,uint16_t datapos)
    uploadcounter = 0;
    if (statuscode==0)
    {
-      
       lcd_gotoxy(0,0);
       lcd_puts("      \0");
       lcd_gotoxy(0,0);
@@ -528,7 +526,6 @@ void alarm_browserresult_callback(uint8_t statuscode,uint16_t datapos)
       web_client_sendok++;
       callbackstatus |= (1<< ALARMCALLBACK); // OK
       //	sei();
-      
    }
    else
    {
