@@ -260,6 +260,15 @@ static uint8_t web_client_sendok=0;
 static volatile uint8_t sec=0;
 static volatile uint8_t cnt2step=0;
 
+static volatile uint16_t tcpdelaycounterL=0;
+static volatile uint16_t tcpdelaycounterH=0;
+static volatile uint8_t tcpdelaystatus=0;
+
+#define TCPRESETBIT           7     // setzen wenn reset ausgeloest werden soll
+
+#define TCPWAITBIT            6     // warten mit eventuell naechstem Reset
+#define TCPMAXWAIT            3     // Anzahl Ueberschreitungen bis Reset
+#define TCPDELAY              0x0FFF   // Grenze fuer Ausloesung des Reset
 
 volatile uint8_t d3counter=0;
 
@@ -340,9 +349,27 @@ void Timer0()
 
 ISR(TIMER0_COMPA_vect)
 {
-   
+   tcpdelaycounterL++;
+   if(tcpdelaycounterL > 0xFFF)
+   {
+      tcpdelaycounterL=0;
+      tcpdelaycounterH++;
+   }
+   if (tcpdelaycounterL > TCPDELAY) // lang genug gewartet
+   {
+      tcpdelaycounterL=0;
+      tcpdelaycounterH=0;
+      tcpdelaystatus++;    // status incrementieren
+      if ((tcpdelaystatus & 0x0F) > TCPMAXWAIT)
+      {
+         tcpdelaystatus |= (1<<TCPRESETBIT);
+         
+      }
+      
+   }
+      
    TCNT0=0;
-	if(EventCounter < 0x9FFF)// am Zaehlen, warten auf beenden von TWI // 0x1FF: 2 s
+	if(EventCounter < 0xAFFF)// am Zaehlen, warten auf beenden von TWI // 0x1FF: 2 s
 	{
 		
 	}
@@ -459,19 +486,16 @@ void solar_browserresult_callback(uint8_t statuscode,uint16_t datapos)
    // datapos is not used in this example
    if (statuscode==0)
    {
-      
       lcd_gotoxy(0,0);
       lcd_puts("      \0");
       lcd_gotoxy(0,0);
       lcd_puts("s cbOK\0");
-      
       lcd_gotoxy(6,0);
       lcd_puts("  ");   // statuscode entfernen
       
       web_client_sendok++;
       callbackstatus |= (1<< SOLARCALLBACK); // OK
       //				sei();
-      
    }
    else
    {
@@ -486,9 +510,24 @@ void solar_browserresult_callback(uint8_t statuscode,uint16_t datapos)
 
 void home_browserresult_callback(uint8_t statuscode,uint16_t datapos)
 {
+   // Zeit fuer serveraufruf messen. Wenn zu gross: reset
+   lcd_clr_line(0);
+   lcd_gotoxy(8,0);
+   lcd_putc('*');
+   //lcd_putint12(tcpdelaycounterH);
+   lcd_putint16(tcpdelaycounterL);
+   lcd_putc('*');
+   tcpdelaycounterL=0;
+   tcpdelaycounterH=0;
+   if (tcpdelaystatus & 0x0F) // schon Resets gesetzt, Anzahl decrementieren
+   {
+      tcpdelaystatus --;
+   }
+   
    // datapos is not used in this example
    if (statuscode==0)
    {
+      
       lcd_gotoxy(0,0);
       lcd_puts("      \0");
       lcd_gotoxy(0,0);
@@ -2129,6 +2168,14 @@ int main(void)
          sendWebCount &= ~(1<<DATASEND); // Senden beendet
 		}
       
+      if (tcpdelaystatus & (1<<TCPRESETBIT)) // reset des webservers ausloesen
+      {
+         tcpdelaystatus &= ~(1<<TCPRESETBIT);
+         tcpdelaystatus &= ~0x0F;
+         PORTD &= ~(1<<7);
+         delay_ms(1);
+         PORTD |= (1<<7);
+      }
       
 		
 		//		sendWebCount=0;
@@ -2896,6 +2943,9 @@ int main(void)
 #pragma mark HeizungDaten an HomeServer schicken
                if (sendWebCount == 3) // Home-Daten an HomeServer -> home schicken
                {
+                  // Zeit bis zur callbackantwort messen. Zu gross: reset
+                  tcpdelaycounterL=0;
+                  tcpdelaycounterH=0;
                   start_web_client=5;
                   web_client_attempts++;
                   start_web_client=0;// ping wieder ermoeglichen

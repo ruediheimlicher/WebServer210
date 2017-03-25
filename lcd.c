@@ -213,6 +213,19 @@ void lcd_putint12(uint16_t zahl)
    lcd_puts(string);
 }
 
+void lcd_putint16(uint16_t zahl)
+{
+   char string[8];
+   int8_t i;                             // schleifenzähler
+   
+   string[7]='\0';                       // String Terminator
+   for(i=6; i>=0; i--)
+   {
+      string[i]=(zahl % 10) +'0';         // Modulo rechnen, dann den ASCII-Code von '0' addieren
+      zahl /= 10;
+   }
+   lcd_puts(string);
+}
 
 
 /*************************************************************************
