@@ -1059,6 +1059,10 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
                   {
                      permanent = strtol(actionbuf,NULL,16);                     
                   }
+                  
+                  // Test bei Umstellung, kontroille eeprom.pl
+                  permanent = 1;
+                  
                   if (permanent)
                   {
                      webtaskflag = EEPROMWRITETASK;               // Task fuer permanent setzen
