@@ -1051,14 +1051,13 @@ uint8_t analyse_get_url(char *str)	// codesnippet von Watchdog
 					
 					if (find_key_val(str,actionbuf,28,"data"))		// Datenstring mit
 					{
-                  
-                  webtaskflag = EEPROMWRITETASK;					// Task setzen
+                   webtaskflag = EEPROMWRITETASK;					// Task setzen
                   out_startdaten=EEPROMWRITETASK; // B7
                   dataOK ++;
                   
                   uint8_t datacode = atoi(actionbuf);
                   
-                  if (datacode == 1)
+                  if (datacode == 1) // data ist da
                   {
   #pragma mark Data
                      if (find_key_val(str,actionbuf,10,"d0"))		// byte von data
