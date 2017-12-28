@@ -3202,8 +3202,6 @@ int main(void)
                    itoa(inbuffer[35],d,16);
                    strcat(WebDataString,d);
                   
-                  
-                   
                    char webstromstring[16]={};
                    /*
                    leistung=0;
