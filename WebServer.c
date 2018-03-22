@@ -79,7 +79,7 @@ volatile uint8_t txstartbuffer;
 
 //static char HeizungDataString[96];
 static char WebDataString[96];
-//static char EEPROM_String[96];
+static char EEPROM_String[96];
 
 //static  char d[4]={};
 //static char* key1;
@@ -1312,7 +1312,7 @@ uint16_t print_webpage_send_EEPROM_Data(uint8_t *buf,  uint8_t* data)
 	
 }
 
-uint16_t print_webpage_ok(uint8_t *buf,uint8_t *okcode)
+uint(uint8_t *buf,uint8_t *okcode)
 {
 	// Schickt den okcode als Bestaetigung fuer den Empfang des Requests
 	uint16_t plen;
@@ -1320,6 +1320,16 @@ uint16_t print_webpage_ok(uint8_t *buf,uint8_t *okcode)
 	plen=fill_tcp_data_p(buf,plen,PSTR("okcode="));
 	plen=fill_tcp_data(buf,plen,(void*)okcode);
 	return plen;
+}
+
+uint16_t print_webpage_ok(uint8_t *buf,uint8_t *okcode)
+{
+   // Schickt den okcode als Bestaetigung fuer den Empfang des Requests
+   uint16_t plen;
+   plen=fill_tcp_data_p(buf,0,PSTR("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nPragma: no-cache\r\n\r\n"));
+   plen=fill_tcp_data_p(buf,plen,PSTR("<p>okcode="));
+   plen=fill_tcp_data(buf,plen,(void*)okcode);   
+   return plen;
 }
 
 
@@ -2246,7 +2256,8 @@ int main(void)
 			lcd_putc('*');
          
          //PORTD &= ~(1<<RELAISPIN);
-			SPI_shift_out();
+			SPI_shift_out(); // Datenaustausch mit Master
+         
 			// Input-Daten der SPI-Aktion Daten von Master
 			
 			//	if (in_startdaten==0xB8)
@@ -2664,7 +2675,8 @@ int main(void)
 					
 				}
 					break;
-					
+
+#pragma mark EEPROMREPORTTASK            
 				case EEPROMREPORTTASK:	// B4 EEPROM-Daten von HomeCentral angekommen, an Homeserver schicken
 				{
 					//				sendWebCount=6;															// senden von TWI-Daten an HomeServer verzoegern
@@ -2685,7 +2697,7 @@ int main(void)
 					{
 						lcd_puthex(inbuffer[byteindex]);
 					}
-					/*
+					
 					EEPROM_String[0]='\0';
 					//OSZILO;
 					uint8_t i=0;
@@ -2702,7 +2714,7 @@ int main(void)
 						
 						
 					}
-                */
+                
                
                
 					//OSZIHI;
@@ -3115,8 +3127,8 @@ int main(void)
                   strcat(WebDataString,d);
                   
                   strcat(WebDataString,"&d9=");
-                  //					uint8_t diff=(errCounter-oldErrCounter);
-                  //					itoa(diff++,d,16); // nur Differenz übermitteln
+                  //	uint8_t diff=(errCounter-oldErrCounter);
+                  //	itoa(diff++,d,16); // nur Differenz übermitteln
                   
                   itoa(errCounter,d,16);
                   strcat(WebDataString,d);
@@ -3444,53 +3456,9 @@ int main(void)
 					TimeoutCounter =0;
 				}
 				
-#pragma mark cmd 8
+#pragma mark cmd 8 // : von HomeCentral empfangene EEPROM-Daten an HomeServer
 				else if (cmd == 8) // von HomeCentral empfangene EEPROM-Daten an HomeServer senden
 				{
-					//lcd_gotoxy(19,1);
-					//lcd_putc('*');
-					//lcd_puts(" - ");
-					//lcd_gotoxy(0,1);
-					//lcd_puts("rE\0");
-					/*
-					 lcd_puthex(out_startdaten);
-					 
-					 lcd_putc(' ');
-					 lcd_puthex(out_hbdaten);
-					 //lcd_putc(' ');
-					 //lcd_putc('l');
-					 lcd_puthex(out_lbdaten);
-					 
-					 //lcd_puthex(EEPROMRxDaten[0]);
-					 //lcd_putc(' ');
-					 //lcd_puthex(EEPROMRxDaten[1]);
-					 //lcd_puthex(EEPROMRxDaten[2]);
-					 
-					 lcd_putc(' ');
-					 lcd_puthex(outbuffer[0]);
-					 lcd_puthex(outbuffer[1]);
-					 //		lcd_puthex(outbuffer[2]);
-					 //		lcd_puthex(outbuffer[3]);
-					 */
-					//uint8_t j=0;
-					//for (j=0;j<12;j++)
-					{
-						//	lcd_putc(EEPROM_String[j]);
-					}
-					/*
-					 lcd_putc(EEPROM_String[0]);
-					 lcd_putc(EEPROM_String[1]);
-					 lcd_putc(EEPROM_String[2]);
-					 lcd_putc(EEPROM_String[3]);
-					 
-					 lcd_gotoxy(6,0);
-					 lcd_putc('s');
-					 lcd_puthex(send_cmd);
-					 */
-					//webspistatus |= (1<<SEND_REQUEST_BIT);
-					//EventCounter=0x2FF0; // Timer fuer SPI vorwaertsstellen 1Aff> 0.7s
-					//webspistatus |= (1<<SPI_REQUEST_BIT);
-					//webspistatus |= (1<<SPI_SHIFT_BIT);
 					if (webspistatus &(1<<SPI_DATA_READY_BIT)) // Daten sind bereit
 					{
 						//dat_p = print_webpage_ok(buf,(void*)"eeprom+\0");
@@ -3498,6 +3466,7 @@ int main(void)
                   
                   WebDataString[0]='\0';
                   //OSZILO;
+                  /*
                   uint8_t i=0;
                   char d[4]={};
                   for (i=0;i< twi_buffer_size;i++)
@@ -3509,13 +3478,13 @@ int main(void)
                      {
                         strcat(WebDataString,"+\0"); // Trennzeichen einfuegen
                      }
-                     
-                     
-                  }
+                   }
+                   */
 
-                  
+                 // strcpy(WebDataString,EEPROM_String);
+                 
 						// an HomeServer senden
-						dat_p = print_webpage_send_EEPROM_Data(buf,(void*)WebDataString);
+						dat_p = print_webpage_send_EEPROM_Data(buf,(void*)EEPROM_String);
 						webspistatus &= ~(1<<SPI_DATA_READY_BIT);		// Data-bereit-bit zueruecksetzen
 					}
 					else

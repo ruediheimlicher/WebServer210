@@ -1,3 +1,7 @@
+cd /Users/ruediheimlicher/Documents/Elektronik/\ AVR/\ AVR_Programme/AVR\ HomeCentral/Webserver210/WebServer210_SPI_A_92
+avr-size -C --mcu=atmega328p TWI_Master.elf
+
+
 fuses
 l: 60
 h: D9
